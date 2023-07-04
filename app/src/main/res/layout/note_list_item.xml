@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="100dp"
+    android:elevation="10dp"
+    android:background="@drawable/oval_background_drawable">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:textColor="@android:color/black"
+            android:textStyle="bold"
+            tools:text="My note tilte long one lol lol olol  ol o l o l lo l l ol o"
+            android:ellipsize="end"
+            android:maxLines="1"
+            />
+
+        <TextView
+            android:id="@+id/tv_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="@color/grey_1"
+            tools:text="My note description long one lol lol olol  ol o l o l lo l l ol o long one lol lol olol  ol o l o l lo l l ol olong one lol lol olol  ol o l o l lo l l ol o"
+            android:ellipsize="end"
+            android:maxLines="1"
+            />
+        <TextView
+            android:id="@+id/tv_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="11sp"
+            android:textColor="@color/grey_2"
+            tools:text="june 21"
+            android:ellipsize="end"
+            android:maxLines="1"
+            />
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
