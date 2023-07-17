@@ -12,5 +12,5 @@ private val dataBase: NotesDataBase
 
     suspend fun deleteNote(note: NoteItem) = dataBase.notesDao().delete(note)
 
-    suspend fun getNote(id:Int) = dataBase.notesDao().getNote(id)
+    suspend fun updateNote(note: NoteItem) = dataBase.notesDao().update(note)
 }

@@ -2,15 +2,19 @@ package com.hellow.noteslite.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import org.jetbrains.annotations.NotNull
 import java.io.Serializable
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Entity(tableName = "Notes")
 data class NoteItem(
-    @PrimaryKey(autoGenerate = true)
-    val id:Int,
-    val title:String = "",
-    val description:String = "",
-   // val date: String = "",
-    val backgroundColor:Int = 0,
-    val priorityColor:Int = 0,
+
+    @NotNull
+    @PrimaryKey()
+    val id:String,
+    var title:String = "",
+    var description:String = "",
+    var backgroundColor:Int = 0,
+    var priorityColor:Int = 0,
 ): Serializable

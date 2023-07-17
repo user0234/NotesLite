@@ -6,7 +6,9 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.hellow.noteslite.model.NoteItem
+import com.hellow.noteslite.model.ThemeItem
 
 @Dao
 interface NotesDao {
@@ -15,10 +17,10 @@ interface NotesDao {
     suspend fun insert(note:NoteItem):Long
 
     @Query("Select * From Notes")
-    fun getNotesList(): LiveData<List<NoteItem>>
+    fun getNotesList(): LiveData<List<NoteItem>?>
 
-    @Query("Select * From Notes Where id = :noteId")
-    fun getNote(noteId:Int):MutableList<NoteItem>
+     @Update
+     suspend fun update(note: NoteItem)
 
     @Delete
     suspend fun delete(note: NoteItem)
