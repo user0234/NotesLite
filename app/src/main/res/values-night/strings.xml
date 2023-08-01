@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Notes Lite</string>
     <string name="toolbar_heading">Notes</string>
@@ -8,5 +9,4 @@
     <string name="zero_notes_view_text">No Notes here yet</string>
     <string name="delete">delete</string>
     <string name="hint_text_color">Title</string>
-
 </resources>

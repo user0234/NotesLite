@@ -4,4 +4,7 @@
         <!-- Customize your dark theme here. -->
         <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
     </style>
+    <style name="Theme.NotesLite" parent="Base.Theme.NotesLite" >
+        <item name="android:colorPrimary">@color/yellow_primary_color</item>
+    </style>
 </resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="stoke_width_theme_item_selected">70dp</dimen>
+
+</resources>

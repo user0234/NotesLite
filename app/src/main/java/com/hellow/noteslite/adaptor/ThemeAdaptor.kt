@@ -2,17 +2,15 @@ package com.hellow.noteslite.adaptor
 
 import android.graphics.Color
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.ViewGroup
-import androidx.core.graphics.toColorInt
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.hellow.noteslite.databinding.NoteListItemBinding
 import com.hellow.noteslite.databinding.ThemeListItemBinding
-import com.hellow.noteslite.model.NoteItem
 import com.hellow.noteslite.model.ThemeItem
 import timber.log.Timber
+import java.security.AccessController.getContext
+
 
 open class ThemeAdaptor: RecyclerView.Adapter<ThemeAdaptor.ThemeViewHolder>(){
 
@@ -46,17 +44,20 @@ open class ThemeAdaptor: RecyclerView.Adapter<ThemeAdaptor.ThemeViewHolder>(){
         val currentItem =  differ.currentList[position]
           // set the data on and changes per item
         Timber.i("theme_value data set")
-
-        holder.binding.ivThemeItem.setBackgroundColor(Color.parseColor(currentItem.backGround_color))
-         
         holder.itemView.setOnClickListener {
             currentSelected = position
             onItemClickListener?.let {
                 it(position)
             }
         }
+
+        holder.binding.ivThemeItem.setBackgroundColor(Color.parseColor(currentItem.backGround_color))
+         
+
         if(position == currentSelected){
-            holder.binding.root.strokeWidth = 6
+            val scale:Float = holder.itemView.context.resources.displayMetrics.density
+
+            holder.binding.root.strokeWidth = (10 * scale + 0.5f).toInt()
         }else{
             holder.binding.root.strokeWidth = 0
         }

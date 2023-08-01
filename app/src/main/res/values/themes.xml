@@ -6,6 +6,7 @@
     </style>
 
     <style name="Theme.NotesLite" parent="Base.Theme.NotesLite" >
+       <item name="android:colorPrimary">@color/yellow_primary_color</item>
 
 
     </style>

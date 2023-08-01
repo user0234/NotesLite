@@ -14,7 +14,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         android:id="@+id/app_bar"
-        android:background="@android:color/black"
         android:fitsSystemWindows="true"
 
         >
@@ -23,7 +22,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:menu="@menu/note_menu"
-            android:background="@android:color/white"
+            app:titleTextColor="@color/out_line_text_color"
             />
 
     </com.google.android.material.appbar.AppBarLayout>
@@ -50,14 +49,14 @@
                 android:textAlignment="textStart"
                 android:inputType="textAutoCorrect"
                 android:textColor="@android:color/black"
-                android:hint="Title"
+                android:hint="@string/hint_text_color"
                 />
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/tv_time"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="17dp"
-                android:textColor="@color/grey_2"
+                android:textColor="@color/light_grey"
                 tools:text="26 June 10:50 AM  | 20 characters"
                 />
             <com.google.android.material.textfield.TextInputEditText
@@ -84,7 +83,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         tools:listitem="@layout/theme_list_item"
         android:visibility="gone"
-        android:background="@android:color/white"
+        android:background="@color/main_background_color"
         />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

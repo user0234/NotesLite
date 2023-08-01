@@ -10,7 +10,7 @@ import com.hellow.noteslite.model.NoteItem
 import com.hellow.noteslite.repository.NotesRepository
 import kotlinx.coroutines.launch
 
-class CreatEditViewModel(app: Application,
+class CreatEditViewModel(val app: Application,
     private val repository: NotesRepository
 ) : AndroidViewModel(app) {
 
@@ -71,12 +71,19 @@ class CreatEditViewModel(app: Application,
         setTimeValue(noteItem.id)
     }
 
+    fun getFiles(name:String) {
+        val file = app.filesDir.listFiles()
+        file.filter { it.isFile && it.canRead() && it.exists() && it.name.startsWith(name)  }.map {
+            val byte = it.readBytes()
+            byte
+        }
+    }
+
     fun deleteNote() = viewModelScope.launch {
         repository.deleteNote(currentNote)
     }
 
     fun updateNote() {
-
         currentNote.title = _title.value!!
         currentNote.description = _description.value!!
         currentNote.backgroundColor = _themeColor.value!!

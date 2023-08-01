@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="main_background_color">#0E0E0E</color>
+    <color name="out_line_text_color">#E5EAF1</color>
+    <color name="collapsable_app_bar_background">#232321</color>
+    <color name="yellow_primary_color">#6D6E39</color>
+    <color name="grey_text_color">#DDCCCC</color>
+    <color name="transparent">#00FFFFFF</color>
+</resources>

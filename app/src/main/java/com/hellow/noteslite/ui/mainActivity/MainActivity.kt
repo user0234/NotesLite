@@ -44,9 +44,6 @@ class MainActivity : AppCompatActivity() {
         setUpFullScreenUI()
         setUpToolBar()
         setUpRecyclerViewList()
-
-
-
         viewBinding.fabCreate.setOnClickListener {
             val intent = Intent(this,CreatEditActivity::class.java)
             val noteId = LocalDateTime.now().format(DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy HH:mm:ss a")).toString()
@@ -72,6 +69,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
 
     private fun setUpItemTouchHelper() {
         val itemTouchHelperCallBack  = object : ItemTouchHelper.SimpleCallback(

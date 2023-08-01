@@ -4,5 +4,9 @@
     <color name="transparent">#00FFFFFF</color>
     <color name="grey_text_color">#555555</color>
     <color name="grey_1">#4C4E52</color>
-    <color name="grey_2">#6F7378</color>
+    <color name="light_grey">#6F7378</color>
+    <color name="yellow_primary_color">#FCFF55</color>
+    <color name="main_background_color">#6F7378</color>
+    <color name="out_line_text_color">#020202</color>
+    <color name="theme_background_color">#E6DFDF</color>
 </resources>

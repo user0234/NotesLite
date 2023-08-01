@@ -1,5 +1,6 @@
 package com.hellow.noteslite.adaptor
 
+import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.Color
 import android.util.TypedValue
@@ -43,12 +44,42 @@ open class NotesAdaptor: RecyclerView.Adapter<NotesAdaptor.NotesViewHolder>(){
 
     override fun onBindViewHolder(holder: NotesViewHolder, position: Int) {
         val currentItem =  differ.currentList[position]
+
+
+
         holder.binding.tvTitle.text = currentItem.title
         holder.binding.tvDescription.text = currentItem.description
          holder.binding.tvTime.text = ConstantValues.dateConvert(currentItem.id)
-        val color:String = ConstantValues.BackGroundColor[currentItem.backgroundColor]
-        holder.binding.root.setCardBackgroundColor((Color.parseColor(color)))
-        holder.itemView.setOnClickListener {
+        when (holder.itemView.context.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)) {
+            Configuration.UI_MODE_NIGHT_YES -> {
+                if(currentItem.backgroundColor == 0){
+                    holder.binding.root.setCardBackgroundColor(Color.parseColor(ConstantValues.NightModeDefaultTheme.backGround_color))
+                    holder.binding.tvTitle.setTextColor(Color.parseColor(ConstantValues.NightModeDefaultTheme.title_color))
+                    holder.binding.tvTime.setTextColor(Color.parseColor(ConstantValues.NightModeDefaultTheme.subTitle_color))
+                    holder.binding.tvDescription.setTextColor(Color.parseColor(ConstantValues.NightModeDefaultTheme.subTitle_color))
+                }else{
+                    holder.binding.root.setCardBackgroundColor(Color.parseColor(ConstantValues.BackGroundColor[currentItem.backgroundColor]))
+                    holder.binding.tvTitle.setTextColor(Color.parseColor(ConstantValues.titleColor[currentItem.backgroundColor]))
+                    holder.binding.tvTime.setTextColor(Color.parseColor(ConstantValues.subTitleColor[currentItem.backgroundColor]))
+                    holder.binding.tvDescription.setTextColor(Color.parseColor(ConstantValues.subTitleColor[currentItem.backgroundColor]))
+
+                }
+            }
+            Configuration.UI_MODE_NIGHT_NO -> {
+                holder.binding.root.setCardBackgroundColor(Color.parseColor(ConstantValues.BackGroundColor[currentItem.backgroundColor]))
+                holder.binding.tvTitle.setTextColor(Color.parseColor(ConstantValues.titleColor[currentItem.backgroundColor]))
+                holder.binding.tvTime.setTextColor(Color.parseColor(ConstantValues.subTitleColor[currentItem.backgroundColor]))
+                holder.binding.tvDescription.setTextColor(Color.parseColor(ConstantValues.subTitleColor[currentItem.backgroundColor]))
+
+            }
+            Configuration.UI_MODE_NIGHT_UNDEFINED -> {
+                holder.binding.root.setCardBackgroundColor(Color.parseColor(ConstantValues.BackGroundColor[currentItem.backgroundColor]))
+                holder.binding.tvTitle.setTextColor(Color.parseColor(ConstantValues.titleColor[currentItem.backgroundColor]))
+                holder.binding.tvTime.setTextColor(Color.parseColor(ConstantValues.subTitleColor[currentItem.backgroundColor]))
+                holder.binding.tvDescription.setTextColor(Color.parseColor(ConstantValues.subTitleColor[currentItem.backgroundColor]))
+            }
+        }
+         holder.itemView.setOnClickListener {
             onItemClickListener?.let {
                 it(currentItem)
             }
@@ -57,21 +88,6 @@ open class NotesAdaptor: RecyclerView.Adapter<NotesAdaptor.NotesViewHolder>(){
         holder.binding.tvTitle.width =
             TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 275f, res.displayMetrics).toInt()
 
-        holder.itemView.setOnTouchListener(object : View.OnTouchListener {
-            override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-                when (event?.action) {
-                    MotionEvent.ACTION_DOWN ->  {
-                         // change the size on view
-                         // TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 65f, resources.displayMetrics)
-                    }
-                    MotionEvent.ACTION_UP -> {
-                         // reset the size of view
-                    }
-                }
-
-                return v?.onTouchEvent(event) ?: true
-            }
-        })
     }
 
     private var onItemClickListener: ((NoteItem) -> Unit)? = null
@@ -79,7 +95,6 @@ open class NotesAdaptor: RecyclerView.Adapter<NotesAdaptor.NotesViewHolder>(){
     fun setOnItemClickListener(listener: (NoteItem) -> Unit) {
         onItemClickListener = listener
     }
-
 
 }
 

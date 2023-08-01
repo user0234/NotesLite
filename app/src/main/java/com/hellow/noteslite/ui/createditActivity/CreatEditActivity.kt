@@ -1,14 +1,13 @@
 package com.hellow.noteslite.ui.createditActivity
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.provider.ContactsContract.CommonDataKinds.Note
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.core.view.isVisible
@@ -24,41 +23,53 @@ import com.hellow.noteslite.model.ThemeItem
 import com.hellow.noteslite.repository.NotesRepository
 import com.hellow.noteslite.utils.ConstantValues
 import com.hellow.noteslite.utils.CreatEditViewModelProvider
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 
 class CreatEditActivity : AppCompatActivity() {
 
-        private lateinit var viewBinding: ActivityCreatEditBinding
-        private lateinit var viewModel: CreatEditViewModel
-        private lateinit var themeAdaptor: ThemeAdaptor
+    private lateinit var viewBinding: ActivityCreatEditBinding
+    private lateinit var viewModel: CreatEditViewModel
+    private lateinit var themeAdaptor: ThemeAdaptor
 
-        private var actionMode: ActionMode? = null
-        private lateinit var noteId:String
-        private val themeList:MutableList<ThemeItem>  =  mutableListOf()
+    private var actionMode: ActionMode? = null
+    private lateinit var noteId: String
+    private val themeList: MutableList<ThemeItem> = mutableListOf()
 
-         init {
-                 for(i in 0..5 ){
-                 themeList.add(ThemeItem(ConstantValues.titleColor[i],ConstantValues.subTitleColor[i],ConstantValues.BackGroundColor[i]))
-                 }
-          }
+    init {
+        for (i in 0..3) {
+            themeList.add(
+                ThemeItem(
+                    ConstantValues.titleColor[i],
+                    ConstantValues.subTitleColor[i],
+                    ConstantValues.BackGroundColor[i],
+                    ConstantValues.toolBarColor[i]
+                )
+            )
+        }
+    }
 
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         viewBinding = ActivityCreatEditBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
 
         val notesRepository = NotesRepository(NotesDataBase(this)!!)
-        val viewModelProviderFactory = CreatEditViewModelProvider(application,notesRepository)
-        viewModel = ViewModelProvider(this,viewModelProviderFactory)[CreatEditViewModel::class.java]
+        val viewModelProviderFactory = CreatEditViewModelProvider(application, notesRepository)
+        viewModel =
+            ViewModelProvider(this, viewModelProviderFactory)[CreatEditViewModel::class.java]
 
 
-        if(intent.hasExtra("newNote")){
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
-                viewModel.setCurrentNote(intent.getSerializableExtra("newNote",NoteItem::class.java)!!)
-            } else{
+        if (intent.hasExtra("newNote")) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                viewModel.setCurrentNote(
+                    intent.getSerializableExtra(
+                        "newNote",
+                        NoteItem::class.java
+                    )!!
+                )
+            } else {
                 val note = intent.getSerializableExtra("newNote") as NoteItem?
                 viewModel.setCurrentNote(note!!)
             }
@@ -66,10 +77,15 @@ class CreatEditActivity : AppCompatActivity() {
 
         }
 
-        if(intent.hasExtra("oldNote")){
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
-                viewModel.setCurrentNote(intent.getSerializableExtra("oldNote",NoteItem::class.java)!!)
-            } else{
+        if (intent.hasExtra("oldNote")) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                viewModel.setCurrentNote(
+                    intent.getSerializableExtra(
+                        "oldNote",
+                        NoteItem::class.java
+                    )!!
+                )
+            } else {
                 val note = intent.getSerializableExtra("oldNote") as NoteItem?
                 viewModel.setCurrentNote(note!!)
             }
@@ -81,26 +97,26 @@ class CreatEditActivity : AppCompatActivity() {
         themeAdaptor.differ.submitList(themeList)
         themeAdaptor.setOnItemClickListener {
             // make the background as selected theme
-            setTheme(themeList[it])
+         //   setThemeToView(themeList[it])
             viewModel.setThemeValue(it)
             // for now to update the list for selectable
             themeAdaptor.notifyDataSetChanged()
         }
 
         viewBinding.etTitle.setOnFocusChangeListener { _, hasFocus ->
-            if(hasFocus){
+            if (hasFocus) {
                 viewBinding.appBar.visibility = View.GONE
                 viewBinding.listBackgroundTheme.visibility = View.GONE
-                actionMode = if(actionMode != null){
+                actionMode = if (actionMode != null) {
                     actionMode!!.finish()
                     startSupportActionMode(actionModeCallBackTitle)!!
-                }else{
+                } else {
                     startSupportActionMode(actionModeCallBackTitle)!!
                 }
-            }else{
+            } else {
                 setUpToolBar()
                 viewBinding.appBar.visibility = View.VISIBLE
-                 if(actionMode != null){
+                if (actionMode != null) {
                     actionMode!!.finish()
                 }
             }
@@ -108,27 +124,27 @@ class CreatEditActivity : AppCompatActivity() {
         }
 
         viewBinding.etTitle.addTextChangedListener {
-               viewModel.setTitle(it.toString())
+            viewModel.setTitle(it.toString())
         }
 
-        viewBinding.etDescription.addTextChangedListener{
+        viewBinding.etDescription.addTextChangedListener {
             viewModel.setDesc(it.toString())
         }
 
         viewBinding.etDescription.setOnFocusChangeListener { _, hasFocus ->
-            if(hasFocus){
+            if (hasFocus) {
                 viewBinding.appBar.visibility = View.GONE
                 viewBinding.listBackgroundTheme.visibility = View.GONE
-                actionMode = if(actionMode != null) {
+                actionMode = if (actionMode != null) {
                     actionMode!!.finish()
                     startSupportActionMode(actionModeCallBackSubTitle)!!
-                }else{
+                } else {
                     startSupportActionMode(actionModeCallBackSubTitle)!!
                 }
-            }else{
+            } else {
                 viewBinding.appBar.visibility = View.VISIBLE
                 setUpToolBar()
-                if(actionMode != null) {
+                if (actionMode != null) {
                     actionMode!!.finish()
                 }
             }
@@ -144,14 +160,34 @@ class CreatEditActivity : AppCompatActivity() {
             viewBinding.etDescription.setSelection(viewBinding.etDescription.length())
         }
         viewModel.themeLiveData.observe(this) {
-            setTheme(themeList[it])
+            setThemeValue(it)
         }
         viewModel.timeLiveData.observe(this) {
-               viewBinding.tvTime.text = ConstantValues.dateConvert(it)
+            viewBinding.tvTime.text = ConstantValues.dateConvert(it)
         }
     }
 
-    private fun setTheme(item: ThemeItem){
+    private fun setThemeValue(value:Int){
+        when (applicationContext.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)) {
+            Configuration.UI_MODE_NIGHT_YES -> {
+               if(value==0){
+                   setThemeToView(ConstantValues.NightModeDefaultTheme)
+               }else{
+                   setThemeToView(themeList[value])
+               }
+            }
+            Configuration.UI_MODE_NIGHT_NO -> {
+                setThemeToView(themeList[value])
+            }
+            Configuration.UI_MODE_NIGHT_UNDEFINED -> {
+                setThemeToView(themeList[value])
+            }
+        }
+
+    }
+
+
+    private fun setThemeToView(item: ThemeItem) {
         timber.log.Timber.i("Theme_selected")
         viewBinding.etTitle.setTextColor(Color.parseColor(item.title_color))
         viewBinding.etTitle.setHintTextColor(Color.parseColor(item.subTitle_color))
@@ -159,15 +195,15 @@ class CreatEditActivity : AppCompatActivity() {
         viewBinding.etDescription.setHintTextColor(Color.parseColor(item.subTitle_color))
         viewBinding.tvTime.setTextColor(Color.parseColor(item.subTitle_color))
         viewBinding.root.setBackgroundColor(Color.parseColor(item.backGround_color))
-        viewBinding.toolbar.setBackgroundColor(Color.parseColor(item.backGround_color))
+        viewBinding.toolbar.setBackgroundColor(Color.parseColor(item.toolBarColor))
         viewBinding.toolbar.setTitleTextColor(Color.parseColor(item.title_color))
-
+        viewBinding.listBackgroundTheme.setBackgroundColor(Color.parseColor(item.toolBarColor))
         setUpToolBar()
     }
 
-    private val actionModeCallBackSubTitle : ActionMode.Callback = object : ActionMode.Callback {
+    private val actionModeCallBackSubTitle: ActionMode.Callback = object : ActionMode.Callback {
         override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-            mode!!.menuInflater.inflate(R.menu.action_bar_menu,menu)
+            mode!!.menuInflater.inflate(R.menu.action_bar_menu, menu)
             return true
         }
 
@@ -177,13 +213,16 @@ class CreatEditActivity : AppCompatActivity() {
 
         override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
             return when (item!!.itemId) {
-                R.id.menu_done -> { viewBinding.etTitle.clearFocus()
+                R.id.menu_done -> {
+                    viewBinding.etTitle.clearFocus()
                     mode?.finish()
                     true
                 }
+
                 android.R.id.home -> {
                     this@CreatEditActivity.finish()
-                    return true }
+                    return true
+                }
 
                 else -> false
             }
@@ -198,9 +237,9 @@ class CreatEditActivity : AppCompatActivity() {
 
     }
 
-    private val actionModeCallBackTitle : ActionMode.Callback = object : ActionMode.Callback {
+    private val actionModeCallBackTitle: ActionMode.Callback = object : ActionMode.Callback {
         override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-            mode!!.menuInflater.inflate(R.menu.action_bar_menu,menu)
+            mode!!.menuInflater.inflate(R.menu.action_bar_menu, menu)
             return true
         }
 
@@ -210,13 +249,16 @@ class CreatEditActivity : AppCompatActivity() {
 
         override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
             return when (item!!.itemId) {
-                R.id.menu_done -> { viewBinding.etTitle.clearFocus()
+                R.id.menu_done -> {
+                    viewBinding.etTitle.clearFocus()
                     mode?.finish()
                     true
                 }
-                 android.R.id.home -> {
-                     this@CreatEditActivity.finish()
-                return true }
+
+                android.R.id.home -> {
+                    this@CreatEditActivity.finish()
+                    return true
+                }
 
                 else -> false
             }
@@ -234,8 +276,10 @@ class CreatEditActivity : AppCompatActivity() {
     private fun setUpThemeListView() {
         themeAdaptor = ThemeAdaptor()
         viewBinding.listBackgroundTheme.adapter = themeAdaptor
-        viewBinding.listBackgroundTheme.layoutManager = LinearLayoutManager(this,
-            LinearLayoutManager.HORIZONTAL,false)
+        viewBinding.listBackgroundTheme.layoutManager = LinearLayoutManager(
+            this,
+            LinearLayoutManager.HORIZONTAL, false
+        )
         viewBinding.listBackgroundTheme.setHasFixedSize(true)
     }
 
@@ -251,15 +295,16 @@ class CreatEditActivity : AppCompatActivity() {
         return true
     }
 
-    override fun onOptionsItemSelected(item: MenuItem):Boolean {
-        when(item.itemId) {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
             R.id.menu_change_theme -> {
-                if(!viewBinding.listBackgroundTheme.isVisible) {
+                if (!viewBinding.listBackgroundTheme.isVisible) {
                     viewBinding.listBackgroundTheme.visibility = View.VISIBLE
-                }else{
+                } else {
                     viewBinding.listBackgroundTheme.visibility = View.GONE
                 }
             }
+
             R.id.menu_item_delete -> {
                 viewModel.deleteNote()
                 finish()
@@ -267,7 +312,7 @@ class CreatEditActivity : AppCompatActivity() {
 
             android.R.id.home -> {
                 finish()
-                }
+            }
 
         }
         return super.onOptionsItemSelected(item)

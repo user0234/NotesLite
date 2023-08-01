@@ -3,7 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="110dp"
     android:layout_height="150dp"
-    app:strokeColor="@android:color/holo_red_dark"
+    app:strokeColor="@color/yellow_primary_color"
     app:strokeWidth="0dp"
     android:padding="2dp"
     android:layout_marginTop="20dp"
