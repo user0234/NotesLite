@@ -3,6 +3,7 @@ package com.hellow.noteslite.ui.createditActivity
 import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.view.Menu
@@ -32,8 +33,8 @@ class CreatEditActivity : AppCompatActivity() {
     private lateinit var themeAdaptor: ThemeAdaptor
 
     private var actionMode: ActionMode? = null
-    private lateinit var noteId: String
     private val themeList: MutableList<ThemeItem> = mutableListOf()
+    private var toolBarColor:String = "#0f0f0f"
 
     init {
         for (i in 0..3) {
@@ -133,12 +134,14 @@ class CreatEditActivity : AppCompatActivity() {
 
         viewBinding.etDescription.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
+
                 viewBinding.appBar.visibility = View.GONE
                 viewBinding.listBackgroundTheme.visibility = View.GONE
-                actionMode = if (actionMode != null) {
+                actionMode =
+                    if (actionMode != null) {
                     actionMode!!.finish()
                     startSupportActionMode(actionModeCallBackSubTitle)!!
-                } else {
+                         } else {
                     startSupportActionMode(actionModeCallBackSubTitle)!!
                 }
             } else {
@@ -161,6 +164,7 @@ class CreatEditActivity : AppCompatActivity() {
         }
         viewModel.themeLiveData.observe(this) {
             setThemeValue(it)
+            themeAdaptor.currentSelected = it
         }
         viewModel.timeLiveData.observe(this) {
             viewBinding.tvTime.text = ConstantValues.dateConvert(it)
@@ -183,7 +187,6 @@ class CreatEditActivity : AppCompatActivity() {
                 setThemeToView(themeList[value])
             }
         }
-
     }
 
 
@@ -198,6 +201,7 @@ class CreatEditActivity : AppCompatActivity() {
         viewBinding.toolbar.setBackgroundColor(Color.parseColor(item.toolBarColor))
         viewBinding.toolbar.setTitleTextColor(Color.parseColor(item.title_color))
         viewBinding.listBackgroundTheme.setBackgroundColor(Color.parseColor(item.toolBarColor))
+        toolBarColor = item.toolBarColor
         setUpToolBar()
     }
 
