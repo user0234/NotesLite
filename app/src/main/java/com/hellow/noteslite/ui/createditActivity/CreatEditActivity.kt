@@ -3,12 +3,12 @@ package com.hellow.noteslite.ui.createditActivity
 import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.core.view.isVisible
@@ -104,8 +104,12 @@ class CreatEditActivity : AppCompatActivity() {
             themeAdaptor.notifyDataSetChanged()
         }
 
-        viewBinding.etTitle.setOnFocusChangeListener { _, hasFocus ->
+        viewBinding.etTitle.setOnFocusChangeListener { view, hasFocus ->
             if (hasFocus) {
+                (applicationContext.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).showSoftInput(
+                    view,
+                    InputMethodManager.SHOW_FORCED
+                )
                 viewBinding.appBar.visibility = View.GONE
                 viewBinding.listBackgroundTheme.visibility = View.GONE
                 actionMode = if (actionMode != null) {
@@ -120,6 +124,10 @@ class CreatEditActivity : AppCompatActivity() {
                 if (actionMode != null) {
                     actionMode!!.finish()
                 }
+                (applicationContext.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(
+                    view.windowToken,
+                    0
+                )
             }
 
         }
@@ -132,8 +140,12 @@ class CreatEditActivity : AppCompatActivity() {
             viewModel.setDesc(it.toString())
         }
 
-        viewBinding.etDescription.setOnFocusChangeListener { _, hasFocus ->
+        viewBinding.etDescription.setOnFocusChangeListener { view, hasFocus ->
             if (hasFocus) {
+                (applicationContext.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).showSoftInput(
+                    view,
+                    InputMethodManager.SHOW_FORCED
+                )
 
                 viewBinding.appBar.visibility = View.GONE
                 viewBinding.listBackgroundTheme.visibility = View.GONE
@@ -145,6 +157,11 @@ class CreatEditActivity : AppCompatActivity() {
                     startSupportActionMode(actionModeCallBackSubTitle)!!
                 }
             } else {
+                (applicationContext.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(
+                    view.windowToken,
+                    0
+                )
+
                 viewBinding.appBar.visibility = View.VISIBLE
                 setUpToolBar()
                 if (actionMode != null) {
