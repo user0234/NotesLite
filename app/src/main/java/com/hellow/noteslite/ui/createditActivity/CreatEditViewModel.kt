@@ -60,7 +60,7 @@ class CreatEditViewModel(val app: Application,
     }
 
     // current stored note
-   private lateinit var currentNote:NoteItem
+   private var currentNote:NoteItem = NoteItem("temp_id")
 
     fun setCurrentNote(noteItem: NoteItem){
         currentNote = noteItem

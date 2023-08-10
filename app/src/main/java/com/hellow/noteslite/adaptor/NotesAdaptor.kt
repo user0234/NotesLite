@@ -3,6 +3,8 @@ package com.hellow.noteslite.adaptor
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.Color
+import android.transition.AutoTransition
+import android.transition.TransitionManager
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -45,8 +47,6 @@ open class NotesAdaptor: RecyclerView.Adapter<NotesAdaptor.NotesViewHolder>(){
     override fun onBindViewHolder(holder: NotesViewHolder, position: Int) {
         val currentItem =  differ.currentList[position]
 
-
-
         holder.binding.tvTitle.text = currentItem.title
         holder.binding.tvDescription.text = currentItem.description
          holder.binding.tvTime.text = ConstantValues.dateConvert(currentItem.id)
@@ -81,18 +81,55 @@ open class NotesAdaptor: RecyclerView.Adapter<NotesAdaptor.NotesViewHolder>(){
         }
          holder.itemView.setOnClickListener {
             onItemClickListener?.let {
-                it(currentItem)
+                it(currentItem,holder.binding.noteLl,holder.adapterPosition)
             }
+             holder.itemView.animate()
+                 .scaleY(1F)
+                 .scaleX(1F)
+                 .setDuration(200)
+                 .start()
+            holder.binding.expendTransitionView.visibility = View.GONE
         }
-        val res: Resources = holder.itemView.context.resources
-        holder.binding.tvTitle.width =
-            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 275f, res.displayMetrics).toInt()
+
+        holder.itemView.setOnTouchListener(object : View.OnTouchListener {
+            override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+
+                when(event?.action){
+                    MotionEvent.ACTION_DOWN -> {
+                        holder.itemView.animate()
+                            .scaleY(0.83F)
+                            .scaleX(0.83F)
+                            .setDuration(200)
+                            .start()
+                    }
+                    MotionEvent.ACTION_CANCEL -> {
+                        holder.itemView.animate()
+                            .scaleX(1F)
+                            .scaleY(1F)
+                            .setDuration(100)
+                            .start()
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        holder.itemView.animate()
+                            .scaleX(1F)
+                            .scaleY(1F)
+                            .setDuration(100)
+                            .start()
+                    }
+                }
+                 return v?.onTouchEvent(event) ?: true
+            }
+
+        })
+//        val res: Resources = holder.itemView.context.resources
+//        holder.binding.tvTitle.width =
+//            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 275f, res.displayMetrics).toInt()
 
     }
 
-    private var onItemClickListener: ((NoteItem) -> Unit)? = null
+    private var onItemClickListener: ((NoteItem,View,Int) -> Unit)? = null
 
-    fun setOnItemClickListener(listener: (NoteItem) -> Unit) {
+    fun setOnItemClickListener(listener: (NoteItem,View,Int) -> Unit) {
         onItemClickListener = listener
     }
 

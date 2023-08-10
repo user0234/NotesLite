@@ -72,5 +72,7 @@ dependencies {
     // Coroutine Lifecycle Scopes
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.1"
 
+    // leak cananry for memory leaks
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.12'
 
 }

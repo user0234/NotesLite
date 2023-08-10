@@ -10,7 +10,7 @@
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         android:id="@+id/app_bar"
@@ -38,10 +38,12 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="10dp"
             android:orientation="vertical"
+            android:transitionName="transition_card"
+
             >
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_title"
-                android:layout_width="match_parent"
+                             android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 style="@style/Widget.Material3.TextInputEditText.FilledBox"
                 tools:text="this is text"
@@ -73,17 +75,25 @@
                 />
         </LinearLayout>
     </ScrollView>
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/theme_card_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:visibility="gone"
 
+        >
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/list_background_theme"
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         tools:listitem="@layout/theme_list_item"
-        android:visibility="gone"
         android:background="@color/main_background_color"
+        tools:itemCount="6"
+        android:paddingHorizontal="10dp"
         />
-
+    </com.google.android.material.card.MaterialCardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

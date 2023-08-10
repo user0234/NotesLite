@@ -3,10 +3,12 @@ package com.hellow.noteslite.ui.mainActivity
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.transition.Explode
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,6 +23,7 @@ import com.hellow.noteslite.ui.createditActivity.CreatEditActivity
 import com.hellow.noteslite.utils.MainViewModelProvider
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -44,30 +47,35 @@ class MainActivity : AppCompatActivity() {
         setUpFullScreenUI()
         setUpToolBar()
         setUpRecyclerViewList()
+        val explode = Explode()
+        explode.duration = 300;
+        window.exitTransition = explode;
+        window.enterTransition = explode;
+
         viewBinding.fabCreate.setOnClickListener {
             val intent = Intent(this,CreatEditActivity::class.java)
             val noteId = LocalDateTime.now().format(DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy HH:mm:ss a")).toString()
             val note = NoteItem(noteId)
             viewModel.addNote(note)
             intent.putExtra("newNote",note)
-            startActivity(intent)
+             startActivity(intent)
         }
 
-        viewModel.getNotesList().observe(this) {
-            if (it == null) {
-                viewBinding.rvNotesList.visibility = View.GONE
-                viewBinding.emptyListView.visibility = View.VISIBLE
-            } else {
-                if(it.isEmpty()){
+            viewModel.getNotesList().observe(this) {
+                if (it == null) {
                     viewBinding.rvNotesList.visibility = View.GONE
                     viewBinding.emptyListView.visibility = View.VISIBLE
                 } else {
-                    notesAdaptor.differ.submitList(it)
-                    viewBinding.rvNotesList.visibility = View.VISIBLE
-                    viewBinding.emptyListView.visibility = View.GONE
+                    if(it.isEmpty()){
+                        viewBinding.rvNotesList.visibility = View.GONE
+                        viewBinding.emptyListView.visibility = View.VISIBLE
+                    } else {
+                        notesAdaptor.differ.submitList(it)
+                        viewBinding.rvNotesList.visibility = View.VISIBLE
+                        viewBinding.emptyListView.visibility = View.GONE
+                    }
                 }
             }
-        }
     }
 
 
@@ -108,12 +116,13 @@ class MainActivity : AppCompatActivity() {
             LinearLayoutManager.VERTICAL,false)
         viewBinding.rvNotesList.setHasFixedSize(true)
         setUpItemTouchHelper()
-          notesAdaptor.setOnItemClickListener {
+          notesAdaptor.setOnItemClickListener { noteItem, view, _ ->
               val intent = Intent(this,CreatEditActivity::class.java)
-              intent.putExtra("newNote",it)
-              startActivity(intent)
+              intent.putExtra("newNote",noteItem)
+              val activityOptionsCompat =
+                  ActivityOptionsCompat.makeSceneTransitionAnimation(this, view, "transition_card")
+              startActivity(intent,activityOptionsCompat.toBundle())
           }
-
     }
     private fun setUpToolBar() {
         setSupportActionBar(viewBinding.toolbar)

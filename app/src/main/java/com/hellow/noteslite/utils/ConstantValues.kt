@@ -2,6 +2,7 @@ package com.hellow.noteslite.utils
 
 import androidx.appcompat.app.AppCompatDelegate.NightMode
 import com.hellow.noteslite.model.ThemeItem
+import timber.log.Timber
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -19,6 +20,10 @@ object ConstantValues {
         return localDateTime.format(DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy HH:mm a"))
             .toString()
 
+    }
+
+    fun logI(value:String){
+         Timber.i(value)
     }
 
 }

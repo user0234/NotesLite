@@ -3,10 +3,16 @@
     <style name="Base.Theme.NotesLite" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="android:windowActivityTransitions">true</item>
+
+        <!-- specify enter and exit transitions -->
+
+
     </style>
 
     <style name="Theme.NotesLite" parent="Base.Theme.NotesLite" >
        <item name="android:colorPrimary">@color/yellow_primary_color</item>
+
 
 
     </style>

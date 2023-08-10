@@ -8,6 +8,8 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
@@ -23,7 +25,10 @@ import com.hellow.noteslite.model.NoteItem
 import com.hellow.noteslite.model.ThemeItem
 import com.hellow.noteslite.repository.NotesRepository
 import com.hellow.noteslite.utils.ConstantValues
+import com.hellow.noteslite.utils.ConstantValues.logI
 import com.hellow.noteslite.utils.CreatEditViewModelProvider
+import java.util.Timer
+import kotlin.concurrent.timerTask
 
 
 class CreatEditActivity : AppCompatActivity() {
@@ -34,7 +39,8 @@ class CreatEditActivity : AppCompatActivity() {
 
     private var actionMode: ActionMode? = null
     private val themeList: MutableList<ThemeItem> = mutableListOf()
-    private var toolBarColor:String = "#0f0f0f"
+    private var toolBarColor: String = "#0f0f0f"
+    private var isActionTabBar = false
 
     init {
         for (i in 0..3) {
@@ -55,8 +61,7 @@ class CreatEditActivity : AppCompatActivity() {
 
         viewBinding = ActivityCreatEditBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
-
-        val notesRepository = NotesRepository(NotesDataBase(this)!!)
+         val notesRepository = NotesRepository(NotesDataBase(this)!!)
         val viewModelProviderFactory = CreatEditViewModelProvider(application, notesRepository)
         viewModel =
             ViewModelProvider(this, viewModelProviderFactory)[CreatEditViewModel::class.java]
@@ -98,7 +103,7 @@ class CreatEditActivity : AppCompatActivity() {
         themeAdaptor.differ.submitList(themeList)
         themeAdaptor.setOnItemClickListener {
             // make the background as selected theme
-         //   setThemeToView(themeList[it])
+            //   setThemeToView(themeList[it])
             viewModel.setThemeValue(it)
             // for now to update the list for selectable
             themeAdaptor.notifyDataSetChanged()
@@ -110,20 +115,23 @@ class CreatEditActivity : AppCompatActivity() {
                     view,
                     InputMethodManager.SHOW_FORCED
                 )
-                viewBinding.appBar.visibility = View.GONE
-                viewBinding.listBackgroundTheme.visibility = View.GONE
-                actionMode = if (actionMode != null) {
-                    actionMode!!.finish()
-                    startSupportActionMode(actionModeCallBackTitle)!!
-                } else {
-                    startSupportActionMode(actionModeCallBackTitle)!!
-                }
-            } else {
+                changeThemeVisibility(false)
+
+                isActionTabBar = true
                 setUpToolBar()
-                viewBinding.appBar.visibility = View.VISIBLE
-                if (actionMode != null) {
-                    actionMode!!.finish()
-                }
+//                actionMode = if (actionMode != null) {
+//                    actionMode!!.finish()
+//                    startSupportActionMode(actionModeCallBackTitle)!!
+//                } else {
+//                    startSupportActionMode(actionModeCallBackTitle)!!
+//                }
+            } else {
+                isActionTabBar = false
+                setUpToolBar()
+//                viewBinding.appBar.visibility = View.VISIBLE
+//                if (actionMode != null) {
+//                    actionMode!!.finish()
+//                }
                 (applicationContext.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(
                     view.windowToken,
                     0
@@ -146,27 +154,31 @@ class CreatEditActivity : AppCompatActivity() {
                     view,
                     InputMethodManager.SHOW_FORCED
                 )
+                isActionTabBar = true
+                setUpToolBar()
+//                viewBinding.appBar.visibility = View.GONE
+                changeThemeVisibility(false)
 
-                viewBinding.appBar.visibility = View.GONE
-                viewBinding.listBackgroundTheme.visibility = View.GONE
-                actionMode =
-                    if (actionMode != null) {
-                    actionMode!!.finish()
-                    startSupportActionMode(actionModeCallBackSubTitle)!!
-                         } else {
-                    startSupportActionMode(actionModeCallBackSubTitle)!!
-                }
+            //
+            //                actionMode =
+//                    if (actionMode != null) {
+//                        actionMode!!.finish()
+//                        startSupportActionMode(actionModeCallBackSubTitle)!!
+//                    } else {
+//                        startSupportActionMode(actionModeCallBackSubTitle)!!
+//                    }
             } else {
                 (applicationContext.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(
                     view.windowToken,
                     0
                 )
+                isActionTabBar = true
 
                 viewBinding.appBar.visibility = View.VISIBLE
                 setUpToolBar()
-                if (actionMode != null) {
-                    actionMode!!.finish()
-                }
+//                if (actionMode != null) {
+//                    actionMode!!.finish()
+//                }
             }
         }
 
@@ -188,18 +200,43 @@ class CreatEditActivity : AppCompatActivity() {
         }
     }
 
-    private fun setThemeValue(value:Int){
+
+
+    private fun changeThemeVisibility(isVisible: Boolean) {
+        if (isVisible) {
+             viewBinding.themeCardView.animate()
+                .translationY(1F)
+                .setDuration(300)
+                .withStartAction {
+                    viewBinding.themeCardView.visibility = View.VISIBLE
+                }
+                .start()
+
+        } else {
+             viewBinding.themeCardView.animate()
+                .translationY(viewBinding.themeCardView.height.toFloat())
+                .setDuration(300)
+                .withEndAction {
+                   viewBinding.themeCardView.visibility = View.GONE
+                }
+                .start()
+     }
+    }
+
+    private fun setThemeValue(value: Int) {
         when (applicationContext.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)) {
             Configuration.UI_MODE_NIGHT_YES -> {
-               if(value==0){
-                   setThemeToView(ConstantValues.NightModeDefaultTheme)
-               }else{
-                   setThemeToView(themeList[value])
-               }
+                if (value == 0) {
+                    setThemeToView(ConstantValues.NightModeDefaultTheme)
+                } else {
+                    setThemeToView(themeList[value])
+                }
             }
+
             Configuration.UI_MODE_NIGHT_NO -> {
                 setThemeToView(themeList[value])
             }
+
             Configuration.UI_MODE_NIGHT_UNDEFINED -> {
                 setThemeToView(themeList[value])
             }
@@ -295,6 +332,7 @@ class CreatEditActivity : AppCompatActivity() {
     }
 
     private fun setUpThemeListView() {
+
         themeAdaptor = ThemeAdaptor()
         viewBinding.listBackgroundTheme.adapter = themeAdaptor
         viewBinding.listBackgroundTheme.layoutManager = LinearLayoutManager(
@@ -302,33 +340,56 @@ class CreatEditActivity : AppCompatActivity() {
             LinearLayoutManager.HORIZONTAL, false
         )
         viewBinding.listBackgroundTheme.setHasFixedSize(true)
+        viewBinding.themeCardView.animate()
+            .translationY(viewBinding.themeCardView.height.toFloat())
+            .setDuration(3)
+            .withEndAction {
+                viewBinding.themeCardView.visibility = View.GONE
+            }
+            .start()
     }
 
     private fun setUpToolBar() {
         setSupportActionBar(viewBinding.toolbar)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         supportActionBar!!.setDisplayShowHomeEnabled(true)
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        logI("option menu setteded")
         val inflater = menuInflater
-        inflater.inflate(R.menu.note_menu, menu)
+        if(!isActionTabBar){
+            inflater.inflate(R.menu.note_menu, menu)
+        }else{
+            inflater.inflate(R.menu.action_bar_menu, menu)
+        }
+
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_change_theme -> {
-                if (!viewBinding.listBackgroundTheme.isVisible) {
-                    viewBinding.listBackgroundTheme.visibility = View.VISIBLE
+                if (!viewBinding.themeCardView.isVisible) {
+                    changeThemeVisibility(true)
+
                 } else {
-                    viewBinding.listBackgroundTheme.visibility = View.GONE
+                    changeThemeVisibility(false)
+
                 }
             }
 
-            R.id.menu_item_delete -> {
+            R.id.menu_item_delete ->
+            {
                 viewModel.deleteNote()
                 finish()
+            }
+
+            R.id.menu_done ->
+            {
+                viewBinding.etTitle.clearFocus()
+                viewBinding.etDescription.clearFocus()
             }
 
             android.R.id.home -> {
