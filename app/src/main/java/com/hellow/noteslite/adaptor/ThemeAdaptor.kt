@@ -9,14 +9,17 @@ import androidx.recyclerview.widget.RecyclerView
 import com.hellow.noteslite.databinding.ThemeListItemBinding
 import com.hellow.noteslite.model.ThemeItem
 import timber.log.Timber
-import java.security.AccessController.getContext
 
 
-open class ThemeAdaptor: RecyclerView.Adapter<ThemeAdaptor.ThemeViewHolder>(){
+open class ThemeAdaptor(private val firstSeletedItem:Int): RecyclerView.Adapter<ThemeAdaptor.ThemeViewHolder>(){
 
     inner class ThemeViewHolder(val binding: ThemeListItemBinding): RecyclerView.ViewHolder(binding.root){
     }
-     var currentSelected:Int = 0
+
+
+      var currentSelected:Int = firstSeletedItem
+
+
     private val differCallBack = object : DiffUtil.ItemCallback<ThemeItem>(){
 
 
@@ -25,7 +28,7 @@ open class ThemeAdaptor: RecyclerView.Adapter<ThemeAdaptor.ThemeViewHolder>(){
         }
 
         override fun areItemsTheSame(oldItem: ThemeItem, newItem: ThemeItem): Boolean {
-           return oldItem.title_color == newItem.title_color
+           return oldItem.editTextColor == newItem.editTextColor
         }
     }
     val differ = AsyncListDiffer(this,differCallBack)
@@ -43,15 +46,14 @@ open class ThemeAdaptor: RecyclerView.Adapter<ThemeAdaptor.ThemeViewHolder>(){
     override fun onBindViewHolder(holder: ThemeViewHolder, position: Int) {
         val currentItem =  differ.currentList[position]
           // set the data on and changes per item
-        Timber.i("theme_value data set")
+
         holder.itemView.setOnClickListener {
-            currentSelected = position
             onItemClickListener?.let {
                 it(position)
             }
         }
 
-        holder.binding.ivThemeItem.setBackgroundColor(Color.parseColor(currentItem.backGround_color))
+        holder.binding.ivThemeItem.setBackgroundColor(Color.parseColor(currentItem.backGroundColor))
          
 
         if(position == currentSelected){

@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.kapt'
     id 'org.jetbrains.kotlin.android'
+    id 'kotlin-parcelize'
 }
 
 android {
@@ -14,7 +15,7 @@ android {
 
     defaultConfig {
         applicationId "com.hellow.noteslite"
-        minSdk 26
+        minSdk 28
         targetSdk 33
         versionCode 1
         versionName "1.0"
@@ -74,5 +75,8 @@ dependencies {
 
     // leak cananry for memory leaks
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.12'
+
+    // Gson converter
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
 
 }

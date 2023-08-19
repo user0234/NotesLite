@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity() {
             val noteId = LocalDateTime.now().format(DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy HH:mm:ss a")).toString()
             val note = NoteItem(noteId)
             viewModel.addNote(note)
-            intent.putExtra("newNote",note)
+            intent.putExtra("noteItem",note)
              startActivity(intent)
         }
 
@@ -118,7 +118,7 @@ class MainActivity : AppCompatActivity() {
         setUpItemTouchHelper()
           notesAdaptor.setOnItemClickListener { noteItem, view, _ ->
               val intent = Intent(this,CreatEditActivity::class.java)
-              intent.putExtra("newNote",noteItem)
+              intent.putExtra("noteItem",noteItem)
               val activityOptionsCompat =
                   ActivityOptionsCompat.makeSceneTransitionAnimation(this, view, "transition_card")
               startActivity(intent,activityOptionsCompat.toBundle())

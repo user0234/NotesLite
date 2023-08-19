@@ -2,6 +2,8 @@ package com.hellow.noteslite.repository
 
 import com.hellow.noteslite.database.NotesDataBase
 import com.hellow.noteslite.model.NoteItem
+import com.hellow.noteslite.model.ThemeItem
+import com.hellow.noteslite.utils.ConstantValues
 
 class NotesRepository(
 private val dataBase: NotesDataBase
@@ -14,5 +16,16 @@ private val dataBase: NotesDataBase
 
     suspend fun updateNote(note: NoteItem) = dataBase.notesDao().update(note)
 
+    fun getTheme(num:Int,nightMode:Boolean):ThemeItem {
+        return if(nightMode){
+            ConstantValues.getNightModeTheme(num)
+        }else{
+            ConstantValues.getLightModeTheme(num)
+        }
+    }
+
+    fun getAllTheme():List<ThemeItem>{
+        return  ConstantValues.themeList
+    }
 
 }

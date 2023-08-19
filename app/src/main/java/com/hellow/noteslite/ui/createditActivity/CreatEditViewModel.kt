@@ -1,104 +1,158 @@
 package com.hellow.noteslite.ui.createditActivity
 
 import android.app.Application
-import android.provider.ContactsContract.CommonDataKinds.Note
+import android.content.res.Configuration
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.hellow.noteslite.model.NoteItem
+import com.hellow.noteslite.model.NoteSubItem
+import com.hellow.noteslite.model.NoteSubItemType
+import com.hellow.noteslite.model.ThemeItem
 import com.hellow.noteslite.repository.NotesRepository
+import com.hellow.noteslite.utils.ConstantValues
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
-class CreatEditViewModel(val app: Application,
-    private val repository: NotesRepository
+class CreatEditViewModel(
+    val app: Application,
+    private val repository: NotesRepository,
+    private val currentItem: NoteItem,
 ) : AndroidViewModel(app) {
 
-   // these are for keeping the state
-   private var _title = MutableLiveData<String>("")
-   val titleLiveData:LiveData<String>
-       get() = _title
+    // set the items for livedata and state saving
 
-    fun setTitle(value:String){
-        if(_title.value.equals(value)){
-            return
-        }
-        _title.value = value
-    }
 
-    private var _description = MutableLiveData<String>()
-    val descLiveData:LiveData<String>
+    private var _description = MutableLiveData<List<NoteSubItem>>(currentItem.description)
+    val descListLiveData: LiveData<List<NoteSubItem>>
         get() = _description
 
-    fun setDesc(value:String){
-        if(_description.value.equals(value)){
-            return
-        }
-        _description.value = value
-    }
-
-    private var _themeColor = MutableLiveData<Int>()
-    val themeLiveData:LiveData<Int>
+    private var _themeColor = MutableLiveData<Int>(currentItem.backgroundColor)
+    val themeLiveData: LiveData<Int>
         get() = _themeColor
-
-    fun setThemeValue(value:Int){
-        if(_themeColor.value == value){
+    fun setTitle(value: String) {
+         currentItem.title = value
+    }
+    fun setThemeValue(value: Int) {
+        if (_themeColor.value == value) {
             return
         }
         _themeColor.value = value
+
+        currentItem.backgroundColor = value
+
     }
 
-    private var _time = MutableLiveData<String>()
-    val timeLiveData:LiveData<String>
-        get() = _time
+    fun getThemeItem(value:Int):ThemeItem{
 
-    private fun setTimeValue(value:String){
-        if(_time.value == value){
-            return
+       return when (app.applicationContext.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)) {
+            Configuration.UI_MODE_NIGHT_YES -> {
+                repository.getTheme(value,true)
+            }
+
+            Configuration.UI_MODE_NIGHT_NO -> {
+                repository.getTheme(value,false)
+            }
+
+            Configuration.UI_MODE_NIGHT_UNDEFINED -> {
+                repository.getTheme(value,false)
+            }
+
+           else -> {
+               repository.getTheme(value,false)
+           }
+       }
+    }
+    fun getAllThemes() = repository.getAllTheme()
+
+    fun changeDescriptionItem(item: NoteSubItem){
+        val list: MutableList<NoteSubItem> = _description.value as MutableList<NoteSubItem>
+
+        list[item.id].type = item.type
+        list[item.id].textValue = item.textValue
+
+        _description.value = list
+    }
+
+    fun editDescriptionItem(isCreate:Boolean,position:Int,type:NoteSubItemType,text:String){
+             if(isCreate){
+                  val item = if(type == NoteSubItemType.String){
+                      NoteSubItem(position,type,false,text)
+                  }else{
+                      NoteSubItem(position,type,false,text)
+                  }
+                  addNewDescriptionItem(item)
+             }else{
+                  deleteDescriptionItem(position)
+             }
+    }
+
+   private fun addNewDescriptionItem(item: NoteSubItem) {
+        val list: MutableList<NoteSubItem> = _description.value as MutableList<NoteSubItem>
+
+        if(item.id==list.size){
+            // inserted at end
+            list.add(item)
+        }else{
+            // inserted at pos
+            list.add(item.id,item)
+            var value:Int = item.id + 1
+            while (value < list.size){
+
+                Timber.i("$value compare these value ${list[value].id}")
+                list[value].id = value
+                ++value
+            }
         }
-        _time.value = value
+        _description.value = list
     }
 
-    // current stored note
-   private var currentNote:NoteItem = NoteItem("temp_id")
+   private fun deleteDescriptionItem(position: Int){
+        val list:MutableList<NoteSubItem> = _description.value!!as MutableList<NoteSubItem>
+        list.removeAt(position)
+        var value:Int = position
+        while (value < list.size){
 
-    fun setCurrentNote(noteItem: NoteItem){
-        currentNote = noteItem
+            Timber.i("$value compare these value  ${list[value].id}")
 
-        setTitle(noteItem.title)
-        setDesc(noteItem.description)
-        setThemeValue(noteItem.backgroundColor)
-        setTimeValue(noteItem.id)
-    }
-
-    fun getFiles(name:String) {
-        val file = app.filesDir.listFiles()
-        file.filter { it.isFile && it.canRead() && it.exists() && it.name.startsWith(name)  }.map {
-            val byte = it.readBytes()
-            byte
+            list[value].id = value
+            ++value
         }
+
+       _description.value = list
     }
+
+ fun updateDescriptionItem(value:List<NoteSubItem>){
+       _description.value = value
+   }
+
 
     fun deleteNote() = viewModelScope.launch {
-        repository.deleteNote(currentNote)
+        repository.deleteNote(currentItem)
     }
 
     fun updateNote() {
-        currentNote.title = _title.value!!
-        currentNote.description = _description.value!!
-        currentNote.backgroundColor = _themeColor.value!!
 
-        if(currentNote.title == "" && currentNote.description == ""){
-            viewModelScope.launch {
-                repository.deleteNote(currentNote)
-            }
-        } else{
-            viewModelScope.launch {
-                repository.updateNote(currentNote)
+        currentItem.description = _description.value!!
+        currentItem.backgroundColor = _themeColor.value!!
+
+        for(i in currentItem.description){
+            if(i.textValue!= ""){
+                currentItem.descriptionText = i.textValue
+                break
             }
         }
 
-
+        if (currentItem.title == "" && currentItem.descriptionText == "") {
+            viewModelScope.launch {
+                repository.deleteNote(currentItem)
+            }
+        } else {
+            viewModelScope.launch {
+                repository.updateNote(currentItem)
+            }
+        }
 
     }
 

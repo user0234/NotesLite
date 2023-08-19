@@ -8,22 +8,37 @@ import java.time.format.DateTimeFormatter
 
 object ConstantValues {
 
-    val BackGroundColor:List<String> =  listOf("#ffffff","#fcfcde","#defce0","#def2fc")
-    val titleColor:List<String> = listOf("#000000","#c4c452","#50bf58","#4f9cc2")
-    val subTitleColor:List<String> = listOf("#3d3d3d","#c7c77d","#8abf8e","#82adc2")
-    val toolBarColor:List<String> = listOf("#ababab","#fafae8","#f0fff1","#edf6fa")
-    val PriorityColors:List<String> = listOf("#000000","#3457D5","#E4D00A","#d62828")
-    val NightModeDefaultTheme:ThemeItem = ThemeItem("#f2f5f3","#cdd1ce","#0f0f0f","#4f4e4e")
-    fun dateConvert(date: String): String {
+       fun dateConvert(date: String): String {
         val pattern = DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy HH:mm:ss a")
         val localDateTime = LocalDateTime.parse(date, pattern)
         return localDateTime.format(DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy HH:mm a"))
             .toString()
-
     }
+
+    val themeList:List<ThemeItem> = listOf(
+        ThemeItem("#000000","#33000000","#F4E2E2","#FFFFFF","#7C7878"),
+        ThemeItem("#634907","#33DC8B3B","#DAC2AB","#F4E1CE","#C5A280"),
+        ThemeItem("#072963","#333B69DC","#ABBCDA","#CED9F4","#8097C5"),
+        ThemeItem("#1B6307","#3353DC3B","#B0DAAB","#D5F4CE","#82C580"),
+        ThemeItem("#630707","#33DC3B3B","#DAABAB","#F4CECE","#C58080"),
+    )
+
+    val darkModeTheme:ThemeItem = ThemeItem("#FFFFFF","#33FFFFFF","#000000","#333131","#736666")
 
     fun logI(value:String){
          Timber.i(value)
     }
 
+
+
+    fun getNightModeTheme(num: Int):ThemeItem {
+        return if(num == 0){
+            darkModeTheme
+        }else{
+            themeList[num]
+        }
+    }
+    fun getLightModeTheme(num: Int):ThemeItem {
+        return themeList[num]
+    }
 }

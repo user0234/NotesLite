@@ -1,9 +1,14 @@
 package com.hellow.noteslite.model
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
+
+@Parcelize
 data class ThemeItem(
-    val title_color: String,
-    val subTitle_color: String,
-    val backGround_color: String,
+    val editTextColor: String,
+    val hintTextColor: String,
+    val backGroundColor: String,
     val toolBarColor: String,
-)
+    val timeTextColor:String
+) : Parcelable

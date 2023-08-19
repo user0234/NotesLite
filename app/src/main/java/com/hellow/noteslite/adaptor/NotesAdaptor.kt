@@ -1,11 +1,7 @@
 package com.hellow.noteslite.adaptor
 
 import android.content.res.Configuration
-import android.content.res.Resources
 import android.graphics.Color
-import android.transition.AutoTransition
-import android.transition.TransitionManager
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -15,6 +11,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.hellow.noteslite.databinding.NoteListItemBinding
 import com.hellow.noteslite.model.NoteItem
+import com.hellow.noteslite.model.ThemeItem
 import com.hellow.noteslite.utils.ConstantValues
 
 
@@ -35,7 +32,6 @@ open class NotesAdaptor: RecyclerView.Adapter<NotesAdaptor.NotesViewHolder>(){
     val differ = AsyncListDiffer(this,differCallBack)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NotesViewHolder {
-
         val binding:NoteListItemBinding = NoteListItemBinding.inflate(LayoutInflater.from(parent.context),parent,false)
         return NotesViewHolder(binding)
     }
@@ -48,45 +44,40 @@ open class NotesAdaptor: RecyclerView.Adapter<NotesAdaptor.NotesViewHolder>(){
         val currentItem =  differ.currentList[position]
 
         holder.binding.tvTitle.text = currentItem.title
-        holder.binding.tvDescription.text = currentItem.description
+        holder.binding.tvDescription.text = currentItem.descriptionText
          holder.binding.tvTime.text = ConstantValues.dateConvert(currentItem.id)
-        when (holder.itemView.context.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)) {
-            Configuration.UI_MODE_NIGHT_YES -> {
-                if(currentItem.backgroundColor == 0){
-                    holder.binding.root.setCardBackgroundColor(Color.parseColor(ConstantValues.NightModeDefaultTheme.backGround_color))
-                    holder.binding.tvTitle.setTextColor(Color.parseColor(ConstantValues.NightModeDefaultTheme.title_color))
-                    holder.binding.tvTime.setTextColor(Color.parseColor(ConstantValues.NightModeDefaultTheme.subTitle_color))
-                    holder.binding.tvDescription.setTextColor(Color.parseColor(ConstantValues.NightModeDefaultTheme.subTitle_color))
-                }else{
-                    holder.binding.root.setCardBackgroundColor(Color.parseColor(ConstantValues.BackGroundColor[currentItem.backgroundColor]))
-                    holder.binding.tvTitle.setTextColor(Color.parseColor(ConstantValues.titleColor[currentItem.backgroundColor]))
-                    holder.binding.tvTime.setTextColor(Color.parseColor(ConstantValues.subTitleColor[currentItem.backgroundColor]))
-                    holder.binding.tvDescription.setTextColor(Color.parseColor(ConstantValues.subTitleColor[currentItem.backgroundColor]))
 
-                }
+
+        val currentTheme:ThemeItem = when (holder.itemView.context.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)) {
+            Configuration.UI_MODE_NIGHT_YES -> {
+                ConstantValues.getNightModeTheme(currentItem.backgroundColor)
             }
             Configuration.UI_MODE_NIGHT_NO -> {
-                holder.binding.root.setCardBackgroundColor(Color.parseColor(ConstantValues.BackGroundColor[currentItem.backgroundColor]))
-                holder.binding.tvTitle.setTextColor(Color.parseColor(ConstantValues.titleColor[currentItem.backgroundColor]))
-                holder.binding.tvTime.setTextColor(Color.parseColor(ConstantValues.subTitleColor[currentItem.backgroundColor]))
-                holder.binding.tvDescription.setTextColor(Color.parseColor(ConstantValues.subTitleColor[currentItem.backgroundColor]))
-
+                ConstantValues.getLightModeTheme(currentItem.backgroundColor)
             }
             Configuration.UI_MODE_NIGHT_UNDEFINED -> {
-                holder.binding.root.setCardBackgroundColor(Color.parseColor(ConstantValues.BackGroundColor[currentItem.backgroundColor]))
-                holder.binding.tvTitle.setTextColor(Color.parseColor(ConstantValues.titleColor[currentItem.backgroundColor]))
-                holder.binding.tvTime.setTextColor(Color.parseColor(ConstantValues.subTitleColor[currentItem.backgroundColor]))
-                holder.binding.tvDescription.setTextColor(Color.parseColor(ConstantValues.subTitleColor[currentItem.backgroundColor]))
+                ConstantValues.getLightModeTheme(currentItem.backgroundColor)
+                 }
+
+            else -> {
+                ConstantValues.getLightModeTheme(currentItem.backgroundColor)
             }
         }
-         holder.itemView.setOnClickListener {
+
+        holder.binding.root.setCardBackgroundColor(Color.parseColor(currentTheme.backGroundColor))
+        holder.binding.tvTitle.setTextColor(Color.parseColor(currentTheme.editTextColor))
+        holder.binding.tvTime.setTextColor(Color.parseColor(currentTheme.hintTextColor))
+        holder.binding.tvDescription.setTextColor(Color.parseColor(currentTheme.hintTextColor))
+
+
+        holder.itemView.setOnClickListener {
             onItemClickListener?.let {
                 it(currentItem,holder.binding.noteLl,holder.adapterPosition)
             }
              holder.itemView.animate()
                  .scaleY(1F)
                  .scaleX(1F)
-                 .setDuration(200)
+                 .setDuration(80)
                  .start()
             holder.binding.expendTransitionView.visibility = View.GONE
         }
@@ -99,21 +90,21 @@ open class NotesAdaptor: RecyclerView.Adapter<NotesAdaptor.NotesViewHolder>(){
                         holder.itemView.animate()
                             .scaleY(0.83F)
                             .scaleX(0.83F)
-                            .setDuration(200)
+                            .setDuration(80)
                             .start()
                     }
                     MotionEvent.ACTION_CANCEL -> {
                         holder.itemView.animate()
                             .scaleX(1F)
                             .scaleY(1F)
-                            .setDuration(100)
+                            .setDuration(80)
                             .start()
                     }
                     MotionEvent.ACTION_UP -> {
                         holder.itemView.animate()
                             .scaleX(1F)
                             .scaleY(1F)
-                            .setDuration(100)
+                            .setDuration(80)
                             .start()
                     }
                 }

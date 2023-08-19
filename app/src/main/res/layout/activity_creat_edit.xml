@@ -9,91 +9,126 @@
     tools:context=".ui.mainActivity.MainActivity">
 
     <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:id="@+id/app_bar"
         android:fitsSystemWindows="true"
-
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         >
+
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:menu="@menu/note_menu"
-            app:titleTextColor="@color/out_line_text_color"
-            />
+            app:titleTextColor="@color/out_line_text_color" />
 
     </com.google.android.material.appbar.AppBarLayout>
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/app_bar"
         android:background="@android:color/transparent"
-        >
-        <LinearLayout
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/app_bar">
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="10dp"
-            android:orientation="vertical"
-            android:transitionName="transition_card"
+            android:layout_height="wrap_content">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="10dp"
+                android:orientation="vertical"
+                android:transitionName="transition_card"
+                android:id="@+id/ll_tilte_date"
+                app:layout_constraintTop_toTopOf="parent"
+                >
 
-            >
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_title"
-                             android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                style="@style/Widget.Material3.TextInputEditText.FilledBox"
-                tools:text="this is text"
-                android:textSize="30sp"
-                android:textAlignment="textStart"
-                android:inputType="textAutoCorrect"
-                android:textColor="@android:color/black"
-                android:hint="@string/hint_text_color"
-                />
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/tv_time"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_title"
+                    style="@style/Widget.Material3.TextInputEditText.FilledBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/hint_text_color"
+                    android:inputType="textMultiLine"
+                    android:textAlignment="textStart"
+                    android:textColor="@android:color/black"
+                    android:imeOptions="actionDone"
+                    android:textSize="30sp"
+                    tools:text="this is text" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tv_time"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="17dp"
+                    android:textColor="@color/light_grey"
+                    tools:text="26 June 10:50 AM  | 20 characters" />
+
+            </LinearLayout>
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_description"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="17dp"
-                android:textColor="@color/light_grey"
-                tools:text="26 June 10:50 AM  | 20 characters"
+                app:layout_constraintTop_toBottomOf="@+id/ll_tilte_date"
+                android:layout_marginTop="10dp"
+                android:layout_marginHorizontal="25dp"
+                tools:itemCount="5"
+                tools:listitem="@layout/create_edit_adaptor_checkbox_item"
                 />
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_description"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                style="@style/Widget.Material3.TextInputEditText.FilledBox"
-                tools:text="this is text"
-                android:textSize="18sp"
-                android:textAlignment="textStart"
-                android:inputType="textAutoCorrect"
-                android:textColor="@android:color/black"
-                android:hint="Start typing"
-                />
-        </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
     </ScrollView>
+
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/theme_card_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:visibility="gone"
 
         >
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/list_background_theme"
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/list_background_theme"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:background="@color/main_background_color"
+            android:orientation="horizontal"
+            android:paddingHorizontal="10dp"
+            tools:itemCount="6"
+            tools:listitem="@layout/theme_list_item" />
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/soft_input_about_view"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:orientation="horizontal"
-        tools:listitem="@layout/theme_list_item"
-        android:background="@color/main_background_color"
-        tools:itemCount="6"
-        android:paddingHorizontal="10dp"
-        />
+        android:layout_height="70dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginHorizontal="5dp"
+            >
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/bt_check_box"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:backgroundTint="@android:color/transparent"
+                android:clickable="false"
+                android:visibility="visible"
+                android:src="@drawable/baseline_check_box_24" />
+        </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

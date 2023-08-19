@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="collapsable_app_bar_background">#E5E4E2</color>
-    <color name="transparent">#00FFFFFF</color>
+    <color name="transparent">#736666</color>
     <color name="grey_text_color">#555555</color>
     <color name="grey_1">#4C4E52</color>
     <color name="light_grey">#6F7378</color>

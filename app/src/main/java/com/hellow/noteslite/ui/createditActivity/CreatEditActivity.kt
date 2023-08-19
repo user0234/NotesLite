@@ -1,210 +1,323 @@
 package com.hellow.noteslite.ui.createditActivity
 
 import android.annotation.SuppressLint
-import android.content.res.Configuration
 import android.graphics.Color
+import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
+import android.util.TypedValue
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.view.animation.Animation
-import android.view.animation.AnimationUtils
+import android.view.ViewGroup
+import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.view.ActionMode
 import androidx.core.view.isVisible
-import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hellow.noteslite.R
+import com.hellow.noteslite.adaptor.EditCreateDescriptionItemAdaptor
 import com.hellow.noteslite.adaptor.ThemeAdaptor
 import com.hellow.noteslite.database.NotesDataBase
 import com.hellow.noteslite.databinding.ActivityCreatEditBinding
 import com.hellow.noteslite.model.NoteItem
+import com.hellow.noteslite.model.NoteSubItem
+import com.hellow.noteslite.model.NoteSubItemType
 import com.hellow.noteslite.model.ThemeItem
 import com.hellow.noteslite.repository.NotesRepository
 import com.hellow.noteslite.utils.ConstantValues
-import com.hellow.noteslite.utils.ConstantValues.logI
 import com.hellow.noteslite.utils.CreatEditViewModelProvider
-import java.util.Timer
-import kotlin.concurrent.timerTask
+import com.hellow.noteslite.utils.OnKeyBoardListener
 
 
-class CreatEditActivity : AppCompatActivity() {
+class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
 
     private lateinit var viewBinding: ActivityCreatEditBinding
     private lateinit var viewModel: CreatEditViewModel
     private lateinit var themeAdaptor: ThemeAdaptor
+    private lateinit var descriptionAdaptor: EditCreateDescriptionItemAdaptor
+    private lateinit var noteItemRecieved: NoteItem
+    private lateinit var themeList: List<ThemeItem>
+    private lateinit var descriptionListLatest: List<NoteSubItem>
 
-    private var actionMode: ActionMode? = null
-    private val themeList: MutableList<ThemeItem> = mutableListOf()
-    private var toolBarColor: String = "#0f0f0f"
     private var isActionTabBar = false
-
-    init {
-        for (i in 0..3) {
-            themeList.add(
-                ThemeItem(
-                    ConstantValues.titleColor[i],
-                    ConstantValues.subTitleColor[i],
-                    ConstantValues.BackGroundColor[i],
-                    ConstantValues.toolBarColor[i]
-                )
-            )
-        }
-    }
+    private var focusChangeTriggeredByKeyBoard = false
 
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // set up view Binding
         viewBinding = ActivityCreatEditBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
-         val notesRepository = NotesRepository(NotesDataBase(this)!!)
-        val viewModelProviderFactory = CreatEditViewModelProvider(application, notesRepository)
-        viewModel =
-            ViewModelProvider(this, viewModelProviderFactory)[CreatEditViewModel::class.java]
 
 
-        if (intent.hasExtra("newNote")) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                viewModel.setCurrentNote(
-                    intent.getSerializableExtra(
-                        "newNote",
-                        NoteItem::class.java
-                    )!!
-                )
+        // get the note item passed
+        if (intent.hasExtra("noteItem")) {
+            noteItemRecieved = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableExtra(
+                    "noteItem",
+                    NoteItem::class.java
+                )!!
+
             } else {
-                val note = intent.getSerializableExtra("newNote") as NoteItem?
-                viewModel.setCurrentNote(note!!)
+                intent.getParcelableExtra("noteItem")!!
+
             }
-            viewBinding.toolbar.title = "Create Note"
 
+
+        } else {
+            // kill the activity if note item not found
+            finish()
         }
+        // setUpCurrentItemsInView
 
-        if (intent.hasExtra("oldNote")) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                viewModel.setCurrentNote(
-                    intent.getSerializableExtra(
-                        "oldNote",
-                        NoteItem::class.java
-                    )!!
-                )
-            } else {
-                val note = intent.getSerializableExtra("oldNote") as NoteItem?
-                viewModel.setCurrentNote(note!!)
-            }
-            viewBinding.toolbar.title = "Edit Note"
-        }
+        // whole viewModelSetup
+        setUpViewModel()
 
+        // set up the adaptors for theme data
+
+        themeList = viewModel.getAllThemes()
+        setUpThemeAdaptor()
+        // setUp app bar with different menu
+
+        // initial color of app bar
+        viewBinding.appBar.setBackgroundColor(Color.parseColor(themeList[noteItemRecieved.backgroundColor].toolBarColor))
         setUpToolBar()
-        setUpThemeListView()
+
+        // setUp title values
+        setUpTitleView()
+        viewBinding.tvTime.text = ConstantValues.dateConvert(noteItemRecieved.id)
+        // set up description items
+        //  descriptionListLatest = noteItemRecived.description
+        setUpDescriptionAdaptor()
+
+        setUpCheckBoxButton()
+
+        setKeyboardVisibilityListener(this)
+    }
+
+    private fun setUpTitleView() {
+        // assign initial value
+        viewBinding.etTitle.setText(noteItemRecieved.title)
+        viewBinding.etTitle.setTextColor(Color.parseColor(themeList[noteItemRecieved.backgroundColor].editTextColor))
+        viewBinding.etTitle.setHintTextColor(Color.parseColor(themeList[noteItemRecieved.backgroundColor].hintTextColor))
+
+        viewBinding.etTitle.setOnFocusChangeListener { _, hasFocus ->
+
+            if(focusChangeTriggeredByKeyBoard){
+
+                if(!hasFocus){
+                    setUpToolBar()
+                }
+
+                return@setOnFocusChangeListener
+            }
+            if (hasFocus) {
+
+                isActionTabBar = true
+                changeThemeVisibility(false)
+                setUpToolBar()
+
+                // this will trigger show keyboard code
+                requestKeyBoard()
+                viewBinding.softInputAboutView.visibility = View.GONE
+
+            } else {
+
+                // this will trigger if we click on tick or we change focus to description item and update the current stored item in the view model value
+                isActionTabBar = false
+                descriptionAdaptor.wasFocusTitle = true
+                setUpToolBar()
+                clearKeyBoard()
+                viewModel.setTitle(viewBinding.etTitle.text.toString())
+            }
+
+        }
+    }
+
+    private fun setUpDescriptionAdaptor() {
+        // description adaptor is create using the current theme item
+        descriptionAdaptor =
+            EditCreateDescriptionItemAdaptor(themeList[noteItemRecieved.backgroundColor])
+
+        viewBinding.rvDescription.adapter = descriptionAdaptor
+
+        viewBinding.rvDescription.layoutManager = LinearLayoutManager(
+            this,
+            LinearLayoutManager.VERTICAL, false
+        )
+
+        // size will be changing
+        viewBinding.rvDescription.setHasFixedSize(false)
+
+        // this will be called when we perform addition or deletion on EditCreateDescriptionItemAdaptor
+        descriptionAdaptor.setOnItemAddDeleteListener { isCreate, noteSubItemType, currentItemPos, text ->
+            if (isCreate) {
+                // create a new item
+                viewModel.editDescriptionItem(isCreate, currentItemPos, noteSubItemType, text)
+
+                descriptionAdaptor.keyBoardFocusItem = currentItemPos + 1
+                descriptionAdaptor.differ.submitList(descriptionListLatest)
+
+
+            } else {
+                // delete the current item and add focus to previous
+                viewModel.editDescriptionItem(isCreate, currentItemPos, noteSubItemType, text)
+
+                descriptionAdaptor.keyBoardFocusItem = currentItemPos - 1
+                descriptionAdaptor.differ.submitList(descriptionListLatest)
+            }
+
+        }
+        // this will be called when we click on an item or remove focus from an item
+        descriptionAdaptor.setOnItemChangeFocusListener { hasfocus, position ->
+            if (hasfocus) {
+
+                changeThemeVisibility(false)
+                viewBinding.softInputAboutView.visibility = View.VISIBLE
+                requestKeyBoard()
+
+            } else {
+                clearKeyBoard()
+                viewBinding.softInputAboutView.visibility = View.GONE
+                // to update the values of description in viewModel and differ
+                viewModel.updateDescriptionItem(descriptionAdaptor.differ.currentList)
+
+            }
+            setUpToolBar()
+        }
+        // initial list data setup
+        descriptionAdaptor.differ.submitList(noteItemRecieved.description)
+
+        viewModel.descListLiveData.observe(this) {
+            descriptionListLatest = it
+        }
+    }
+
+    private fun setUpThemeAdaptor() {
+
+        // first value of selected theme when the list is create
+        themeAdaptor = ThemeAdaptor(noteItemRecieved.backgroundColor)
+
+        viewBinding.listBackgroundTheme.adapter = themeAdaptor
+        viewBinding.listBackgroundTheme.layoutManager = LinearLayoutManager(
+            this,
+            LinearLayoutManager.HORIZONTAL, false
+        )
+        viewBinding.listBackgroundTheme.setHasFixedSize(true)
+        // to hide move the theme item and hide it
+        viewBinding.themeCardView.animate()
+            .translationY(viewBinding.themeCardView.height.toFloat())
+            .setDuration(1)
+            .withStartAction {
+                viewBinding.themeCardView.visibility = View.GONE
+            }
+            .start()
+
+
         themeAdaptor.differ.submitList(themeList)
+
+        // this is will be called when we set the theme using the theme item
+
         themeAdaptor.setOnItemClickListener {
             // make the background as selected theme
             //   setThemeToView(themeList[it])
             viewModel.setThemeValue(it)
-            // for now to update the list for selectable
-            themeAdaptor.notifyDataSetChanged()
-        }
-
-        viewBinding.etTitle.setOnFocusChangeListener { view, hasFocus ->
-            if (hasFocus) {
-                (applicationContext.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).showSoftInput(
-                    view,
-                    InputMethodManager.SHOW_FORCED
-                )
-                changeThemeVisibility(false)
-
-                isActionTabBar = true
-                setUpToolBar()
-//                actionMode = if (actionMode != null) {
-//                    actionMode!!.finish()
-//                    startSupportActionMode(actionModeCallBackTitle)!!
-//                } else {
-//                    startSupportActionMode(actionModeCallBackTitle)!!
-//                }
-            } else {
-                isActionTabBar = false
-                setUpToolBar()
-//                viewBinding.appBar.visibility = View.VISIBLE
-//                if (actionMode != null) {
-//                    actionMode!!.finish()
-//                }
-                (applicationContext.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(
-                    view.windowToken,
-                    0
-                )
-            }
 
         }
 
-        viewBinding.etTitle.addTextChangedListener {
-            viewModel.setTitle(it.toString())
-        }
-
-        viewBinding.etDescription.addTextChangedListener {
-            viewModel.setDesc(it.toString())
-        }
-
-        viewBinding.etDescription.setOnFocusChangeListener { view, hasFocus ->
-            if (hasFocus) {
-                (applicationContext.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).showSoftInput(
-                    view,
-                    InputMethodManager.SHOW_FORCED
-                )
-                isActionTabBar = true
-                setUpToolBar()
-//                viewBinding.appBar.visibility = View.GONE
-                changeThemeVisibility(false)
-
-            //
-            //                actionMode =
-//                    if (actionMode != null) {
-//                        actionMode!!.finish()
-//                        startSupportActionMode(actionModeCallBackSubTitle)!!
-//                    } else {
-//                        startSupportActionMode(actionModeCallBackSubTitle)!!
-//                    }
-            } else {
-                (applicationContext.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(
-                    view.windowToken,
-                    0
-                )
-                isActionTabBar = true
-
-                viewBinding.appBar.visibility = View.VISIBLE
-                setUpToolBar()
-//                if (actionMode != null) {
-//                    actionMode!!.finish()
-//                }
-            }
-        }
-
-        viewModel.titleLiveData.observe(this) {
-            viewBinding.etTitle.setText(it.toString())
-            viewBinding.etTitle.setSelection(viewBinding.etTitle.length())
-
-        }
-        viewModel.descLiveData.observe(this) {
-            viewBinding.etDescription.setText(it.toString())
-            viewBinding.etDescription.setSelection(viewBinding.etDescription.length())
-        }
+        // this will be called when we change the theme using fun =${viewModel.setThemeValue(it)}
         viewModel.themeLiveData.observe(this) {
-            setThemeValue(it)
+
             themeAdaptor.currentSelected = it
+            themeAdaptor.differ.submitList(null)
+            themeAdaptor.differ.submitList(themeList)
+            // to get current list based on dark mode and any other factor
+            val currentTheme = viewModel.getThemeItem(it)
+            setThemeToView(currentTheme)
+
         }
-        viewModel.timeLiveData.observe(this) {
-            viewBinding.tvTime.text = ConstantValues.dateConvert(it)
+
+    }
+
+    private fun setUpViewModel() {
+        val notesRepository = NotesRepository(NotesDataBase(this)!!)
+        val viewModelProviderFactory =
+            CreatEditViewModelProvider(application, notesRepository, noteItemRecieved)
+        viewModel =
+            ViewModelProvider(this, viewModelProviderFactory)[CreatEditViewModel::class.java]
+
+    }
+
+    private fun setUpCheckBoxButton() {
+        viewBinding.btCheckBox.setOnClickListener {
+            val list = descriptionAdaptor.differ.currentList
+            val currentFocused = descriptionAdaptor.keyBoardFocusItem
+            // change the item type to check box
+            if (list[currentFocused].type == NoteSubItemType.CheckBox) {
+
+                viewModel.changeDescriptionItem(
+                    NoteSubItem(
+                        currentFocused,
+                        NoteSubItemType.String,
+                        false,
+                        list[currentFocused].textValue
+                    )
+                )
+            } else {
+                viewModel.changeDescriptionItem(
+                    NoteSubItem(
+                        currentFocused,
+                        NoteSubItemType.CheckBox,
+                        false,
+                        list[currentFocused].textValue
+                    )
+                )
+            }
+
+            viewBinding.etTitle.requestFocus()
+            viewBinding.etTitle.clearFocus()
+            descriptionAdaptor.keyBoardFocusItem = currentFocused
+            descriptionAdaptor.notifyItemChanged(currentFocused)
+
+        }
+
+    }
+
+    private fun requestKeyBoard() {
+        (applicationContext.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).showSoftInput(
+            viewBinding.root,
+            InputMethodManager.SHOW_FORCED
+        )
+    }
+
+    private fun clearKeyBoard() {
+        (applicationContext.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(
+            viewBinding.root.windowToken,
+            0
+        )
+    }
+
+    override fun onVisibilityChanged(visible: Boolean) {
+
+        // when keyboard hides or shows
+        if (!visible) {
+            focusChangeTriggeredByKeyBoard = true
+            descriptionAdaptor.keyBoardFocusItem = -1
+            isActionTabBar = false
+            setUpToolBar()
+            viewBinding.etTitle.requestFocus()
+            viewBinding.etTitle.clearFocus()
+            focusChangeTriggeredByKeyBoard = false
         }
     }
 
-
-
     private fun changeThemeVisibility(isVisible: Boolean) {
         if (isVisible) {
-             viewBinding.themeCardView.animate()
+            viewBinding.themeCardView.animate()
                 .translationY(1F)
                 .setDuration(300)
                 .withStartAction {
@@ -213,155 +326,56 @@ class CreatEditActivity : AppCompatActivity() {
                 .start()
 
         } else {
-             viewBinding.themeCardView.animate()
+            viewBinding.themeCardView.animate()
                 .translationY(viewBinding.themeCardView.height.toFloat())
                 .setDuration(300)
                 .withEndAction {
-                   viewBinding.themeCardView.visibility = View.GONE
+                    viewBinding.themeCardView.visibility = View.GONE
                 }
                 .start()
-     }
-    }
-
-    private fun setThemeValue(value: Int) {
-        when (applicationContext.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)) {
-            Configuration.UI_MODE_NIGHT_YES -> {
-                if (value == 0) {
-                    setThemeToView(ConstantValues.NightModeDefaultTheme)
-                } else {
-                    setThemeToView(themeList[value])
-                }
-            }
-
-            Configuration.UI_MODE_NIGHT_NO -> {
-                setThemeToView(themeList[value])
-            }
-
-            Configuration.UI_MODE_NIGHT_UNDEFINED -> {
-                setThemeToView(themeList[value])
-            }
         }
     }
-
 
     private fun setThemeToView(item: ThemeItem) {
         timber.log.Timber.i("Theme_selected")
-        viewBinding.etTitle.setTextColor(Color.parseColor(item.title_color))
-        viewBinding.etTitle.setHintTextColor(Color.parseColor(item.subTitle_color))
-        viewBinding.etDescription.setTextColor(Color.parseColor(item.title_color))
-        viewBinding.etDescription.setHintTextColor(Color.parseColor(item.subTitle_color))
-        viewBinding.tvTime.setTextColor(Color.parseColor(item.subTitle_color))
-        viewBinding.root.setBackgroundColor(Color.parseColor(item.backGround_color))
+
+        // edit text colors
+        viewBinding.etTitle.setTextColor(Color.parseColor(item.editTextColor))
+        viewBinding.etTitle.setHintTextColor(Color.parseColor(item.hintTextColor))
+
+        // time value color
+        viewBinding.tvTime.setTextColor(Color.parseColor(item.hintTextColor))
+        // whole background color
+        viewBinding.root.setBackgroundColor(Color.parseColor(item.backGroundColor))
+        // tool bar color
         viewBinding.toolbar.setBackgroundColor(Color.parseColor(item.toolBarColor))
-        viewBinding.toolbar.setTitleTextColor(Color.parseColor(item.title_color))
+        // theme list background color
         viewBinding.listBackgroundTheme.setBackgroundColor(Color.parseColor(item.toolBarColor))
-        toolBarColor = item.toolBarColor
-        setUpToolBar()
-    }
+        // adding color to the keyboard shown item
+        viewBinding.softInputAboutView.setBackgroundColor(Color.parseColor(item.toolBarColor))
 
-    private val actionModeCallBackSubTitle: ActionMode.Callback = object : ActionMode.Callback {
-        override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-            mode!!.menuInflater.inflate(R.menu.action_bar_menu, menu)
-            return true
-        }
+        // TODO adding color to items of description -  just add and remove the list but first update the theme item
 
-        override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-            return false
-        }
+        descriptionAdaptor.noteItemTheme = item
+        // to update the view theme
+        descriptionAdaptor.notifyDataSetChanged()
 
-        override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
-            return when (item!!.itemId) {
-                R.id.menu_done -> {
-                    viewBinding.etTitle.clearFocus()
-                    mode?.finish()
-                    true
-                }
-
-                android.R.id.home -> {
-                    this@CreatEditActivity.finish()
-                    return true
-                }
-
-                else -> false
-            }
-
-        }
-
-        override fun onDestroyActionMode(mode: ActionMode?) {
-            actionMode = null
-            viewBinding.etDescription.clearFocus()
-            viewBinding.appBar.visibility = View.VISIBLE
-        }
-
-    }
-
-    private val actionModeCallBackTitle: ActionMode.Callback = object : ActionMode.Callback {
-        override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-            mode!!.menuInflater.inflate(R.menu.action_bar_menu, menu)
-            return true
-        }
-
-        override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-            return false
-        }
-
-        override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
-            return when (item!!.itemId) {
-                R.id.menu_done -> {
-                    viewBinding.etTitle.clearFocus()
-                    mode?.finish()
-                    true
-                }
-
-                android.R.id.home -> {
-                    this@CreatEditActivity.finish()
-                    return true
-                }
-
-                else -> false
-            }
-
-        }
-
-        override fun onDestroyActionMode(mode: ActionMode?) {
-            actionMode = null
-            viewBinding.etTitle.clearFocus()
-            viewBinding.appBar.visibility = View.VISIBLE
-        }
-
-    }
-
-    private fun setUpThemeListView() {
-
-        themeAdaptor = ThemeAdaptor()
-        viewBinding.listBackgroundTheme.adapter = themeAdaptor
-        viewBinding.listBackgroundTheme.layoutManager = LinearLayoutManager(
-            this,
-            LinearLayoutManager.HORIZONTAL, false
-        )
-        viewBinding.listBackgroundTheme.setHasFixedSize(true)
-        viewBinding.themeCardView.animate()
-            .translationY(viewBinding.themeCardView.height.toFloat())
-            .setDuration(3)
-            .withEndAction {
-                viewBinding.themeCardView.visibility = View.GONE
-            }
-            .start()
     }
 
     private fun setUpToolBar() {
         setSupportActionBar(viewBinding.toolbar)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         supportActionBar!!.setDisplayShowHomeEnabled(true)
-
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        logI("option menu setteded")
+
         val inflater = menuInflater
-        if(!isActionTabBar){
+
+        if (!isActionTabBar && descriptionAdaptor.keyBoardFocusItem == -1) {
+
             inflater.inflate(R.menu.note_menu, menu)
-        }else{
+        } else {
             inflater.inflate(R.menu.action_bar_menu, menu)
         }
 
@@ -380,17 +394,26 @@ class CreatEditActivity : AppCompatActivity() {
                 }
             }
 
-            R.id.menu_item_delete ->
-            {
+            R.id.menu_item_delete -> {
                 viewModel.deleteNote()
                 finish()
             }
 
-            R.id.menu_done ->
-            {
-                viewBinding.etTitle.clearFocus()
-                viewBinding.etDescription.clearFocus()
+            R.id.menu_done -> {
+
+                viewBinding.softInputAboutView.visibility = View.GONE
+                if (descriptionAdaptor.keyBoardFocusItem != -1) {
+                    descriptionAdaptor.keyBoardFocusItem = -1
+                    viewBinding.etTitle.requestFocus()
+                    viewBinding.etTitle.clearFocus()
+                    // fix this to update other way
+
+                } else {
+                    viewBinding.etTitle.clearFocus()
+                }
+
             }
+
 
             android.R.id.home -> {
                 finish()
@@ -404,5 +427,130 @@ class CreatEditActivity : AppCompatActivity() {
         viewModel.updateNote()
         super.onStop()
     }
+
+    private fun setKeyboardVisibilityListener(onKeyboardVisibilityListener: OnKeyBoardListener) {
+        val parentView = (findViewById<View>(android.R.id.content) as ViewGroup).getChildAt(0)
+        parentView.viewTreeObserver.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
+            private var alreadyOpen = false
+            private val defaultKeyboardHeightDP = 100
+            private val EstimatedKeyboardDP =
+                defaultKeyboardHeightDP + 48
+            private val rect = Rect()
+            override fun onGlobalLayout() {
+                val estimatedKeyboardHeight = TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_DIP,
+                    EstimatedKeyboardDP.toFloat(),
+                    parentView.resources.displayMetrics
+                ).toInt()
+                parentView.getWindowVisibleDisplayFrame(rect)
+                val heightDiff = parentView.rootView.height - (rect.bottom - rect.top)
+                val isShown = heightDiff >= estimatedKeyboardHeight
+                if (isShown == alreadyOpen) {
+                    Log.i("Keyboard state", "Ignoring global layout change...")
+                    return
+                }
+                alreadyOpen = isShown
+                onKeyboardVisibilityListener.onVisibilityChanged(isShown)
+            }
+        })
+
+    }
+//
+//
+//    private val actionModeCallBackSubTitle: ActionMode.Callback = object : ActionMode.Callback {
+//        override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+//            mode!!.menuInflater.inflate(R.menu.action_bar_menu, menu)
+//            return true
+//        }
+//
+//        override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+//            return false
+//        }
+//
+//        override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
+//            return when (item!!.itemId) {
+//                R.id.menu_done -> {
+//                    viewBinding.etTitle.clearFocus()
+//                    mode?.finish()
+//                    true
+//                }
+//
+//                android.R.id.home -> {
+//                    this@CreatEditActivity.finish()
+//                    return true
+//                }
+//
+//                else -> false
+//            }
+//
+//        }
+//
+//        override fun onDestroyActionMode(mode: ActionMode?) {
+//            actionMode = null
+//            //    viewBinding.etDescription.clearFocus()
+//            viewBinding.appBar.visibility = View.VISIBLE
+//        }
+//
+//    }
+//
+//    private val actionModeCallBackTitle: ActionMode.Callback = object : ActionMode.Callback {
+//        override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+//            mode!!.menuInflater.inflate(R.menu.action_bar_menu, menu)
+//            return true
+//        }
+//
+//        override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+//            return false
+//        }
+//
+//        override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
+//            return when (item!!.itemId) {
+//                R.id.menu_done -> {
+//                    viewBinding.etTitle.clearFocus()
+//                    mode?.finish()
+//                    true
+//                }
+//
+//                android.R.id.home -> {
+//                    this@CreatEditActivity.finish()
+//                    return true
+//                }
+//
+//                else -> false
+//            }
+//
+//        }
+//
+//        override fun onDestroyActionMode(mode: ActionMode?) {
+//            actionMode = null
+//            viewBinding.etTitle.clearFocus()
+//            viewBinding.appBar.visibility = View.VISIBLE
+//        }
+//
+//    }
+//    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+//        if (event!!.action == KeyEvent.ACTION_DOWN) {
+//            when (keyCode) {
+//                KeyEvent.KEYCODE_BACK -> {
+//                     if((applicationContext.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).isActive){
+//                         // remove focus
+//                         if(isActionTabBar||descriptionAdaptor.keyBoardFocusItem != -1) {
+//                             if (descriptionAdaptor.keyBoardFocusItem != -1) {
+//                                 descriptionAdaptor.keyBoardFocusItem = -1
+//                                 viewBinding.etTitle.requestFocus()
+//                                 viewBinding.etTitle.clearFocus()
+//                                 // fix this to update other way
+//
+//                             } else {
+//                                 viewBinding.etTitle.clearFocus()
+//                             }
+//                     }
+//
+//                    }
+//                }
+//            }
+//        }
+//        return super.onKeyDown(keyCode, event)
+//    }
 
 }
