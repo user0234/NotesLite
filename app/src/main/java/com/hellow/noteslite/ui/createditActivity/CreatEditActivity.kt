@@ -1,6 +1,5 @@
 package com.hellow.noteslite.ui.createditActivity
 
-import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.Rect
 import android.os.Build
@@ -42,10 +41,11 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
     private lateinit var themeList: List<ThemeItem>
     private lateinit var descriptionListLatest: List<NoteSubItem>
 
-    private var isActionTabBar = false
-    private var focusChangeTriggeredByKeyBoard = false
+    private var focusOnTitle = false
+    private var keyboardNotTriggerChange = false
+    private var focusOnDescriptionItem = false
+    private var keyBoardVisible = false
 
-    @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -91,12 +91,32 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
         setUpTitleView()
         viewBinding.tvTime.text = ConstantValues.dateConvert(noteItemRecieved.id)
         // set up description items
-        //  descriptionListLatest = noteItemRecived.description
+        //  descriptionListLatest = noteItem Received .description
         setUpDescriptionAdaptor()
 
         setUpCheckBoxButton()
 
         setKeyboardVisibilityListener(this)
+
+        viewBinding.btRemoveFocus.setOnClickListener {
+
+        }
+    }
+
+    private fun removeFocusTitle() {
+        viewModel.setTitle(viewBinding.etTitle.text.toString())
+        focusOnTitle = false
+
+        clearKeyBoard()
+
+        setUpToolBar()
+    }
+
+    private fun addFocusTitle() {
+        focusOnTitle = true
+        requestKeyBoard()
+        setUpToolBar()
+        changeThemeVisibility(false)
     }
 
     private fun setUpTitleView() {
@@ -104,39 +124,73 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
         viewBinding.etTitle.setText(noteItemRecieved.title)
         viewBinding.etTitle.setTextColor(Color.parseColor(themeList[noteItemRecieved.backgroundColor].editTextColor))
         viewBinding.etTitle.setHintTextColor(Color.parseColor(themeList[noteItemRecieved.backgroundColor].hintTextColor))
+        viewBinding.removeFocusText.setOnFocusChangeListener { _, hasFocus ->
 
+        }
+        viewBinding.btRemoveFocus.setOnClickListener {
+            doRemoveFocusFromEveryOne()
+        }
         viewBinding.etTitle.setOnFocusChangeListener { _, hasFocus ->
 
-            if(focusChangeTriggeredByKeyBoard){
-
-                if(!hasFocus){
-                    setUpToolBar()
-                }
-
-                return@setOnFocusChangeListener
-            }
             if (hasFocus) {
-
-                isActionTabBar = true
-                changeThemeVisibility(false)
-                setUpToolBar()
-
-                // this will trigger show keyboard code
-                requestKeyBoard()
-                viewBinding.softInputAboutView.visibility = View.GONE
+                // someone clicked on it
+                addFocusTitle()
 
             } else {
-
-                // this will trigger if we click on tick or we change focus to description item and update the current stored item in the view model value
-                isActionTabBar = false
-                descriptionAdaptor.wasFocusTitle = true
-                setUpToolBar()
-                clearKeyBoard()
-                viewModel.setTitle(viewBinding.etTitle.text.toString())
+                // some one clicked on tick or change focus to description item
+                removeFocusTitle()
             }
 
         }
     }
+    override fun onVisibilityChanged(visible: Boolean) {
+        // when keyboard hides or shows
+            keyBoardVisible = visible
+    }
+    private fun doRemoveFocusFromEveryOne() {
+        viewBinding.removeFocusText.requestFocus()
+        viewBinding.removeFocusText.clearFocus()
+    }
+
+
+    private fun removeFocusDesc(position: Int, currentText: String) {
+        descriptionAdaptor.focusItemPosition = -1
+        descriptionAdaptor.differ.currentList[position].textValue = currentText
+        viewModel.updateDescriptionItem(descriptionAdaptor.differ.currentList)
+        viewBinding.softInputAboutView.visibility = View.GONE
+        clearKeyBoard()
+        setUpToolBar()
+    }
+
+    private fun onAddFocusDesc(position: Int) {
+        viewBinding.softInputAboutView.visibility = View.GONE
+        descriptionAdaptor.focusItemPosition = position
+        setUpToolBar()
+        requestKeyBoard()
+        changeThemeVisibility(false)
+    }
+
+    private fun changeDescItemCurrent(){
+        focusOnDescriptionItem = true
+        viewBinding.removeFocusText.requestFocus()
+        viewBinding.removeFocusText.clearFocus()
+        focusOnDescriptionItem = false
+    }
+
+    private fun changeFocusItemTypeFocusRemoved(position: Int, type: NoteSubItemType, text:String){
+                descriptionListLatest[position].type = type
+                descriptionListLatest[position].textValue = text
+                descriptionListLatest[position].checkBox = false
+                requestFocusOnDesc(position)
+    }
+
+    private fun requestFocusOnDesc(position: Int) {
+        descriptionAdaptor.focusItemPosition = -1
+        descriptionAdaptor.differ.submitList(null)
+        descriptionAdaptor.focusItemPosition = position
+        descriptionAdaptor.differ.submitList(descriptionListLatest)
+    }
+
 
     private fun setUpDescriptionAdaptor() {
         // description adaptor is create using the current theme item
@@ -155,39 +209,46 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
 
         // this will be called when we perform addition or deletion on EditCreateDescriptionItemAdaptor
         descriptionAdaptor.setOnItemAddDeleteListener { isCreate, noteSubItemType, currentItemPos, text ->
-            if (isCreate) {
-                // create a new item
+            // this will be used to delete the item only
+            doRemoveFocusFromEveryOne()
+            if (!isCreate) {
+                // delete current item
+
                 viewModel.editDescriptionItem(isCreate, currentItemPos, noteSubItemType, text)
-
-                descriptionAdaptor.keyBoardFocusItem = currentItemPos + 1
+              //  removeFocusAll()
+                descriptionAdaptor.focusItemPosition = currentItemPos - 1
                 descriptionAdaptor.differ.submitList(descriptionListLatest)
-
-
+                requestFocusOnDesc(descriptionAdaptor.focusItemPosition)
             } else {
-                // delete the current item and add focus to previous
-                viewModel.editDescriptionItem(isCreate, currentItemPos, noteSubItemType, text)
+                //  create new item
 
-                descriptionAdaptor.keyBoardFocusItem = currentItemPos - 1
+                viewModel.editDescriptionItem(isCreate, currentItemPos, noteSubItemType, text)
+              // removeFocusAll()
+                descriptionAdaptor.focusItemPosition = currentItemPos + 1
                 descriptionAdaptor.differ.submitList(descriptionListLatest)
+                requestFocusOnDesc(descriptionAdaptor.focusItemPosition)
             }
 
         }
         // this will be called when we click on an item or remove focus from an item
-        descriptionAdaptor.setOnItemChangeFocusListener { hasfocus, position ->
-            if (hasfocus) {
-
-                changeThemeVisibility(false)
-                viewBinding.softInputAboutView.visibility = View.VISIBLE
-                requestKeyBoard()
-
-            } else {
-                clearKeyBoard()
-                viewBinding.softInputAboutView.visibility = View.GONE
-                // to update the values of description in viewModel and differ
-                viewModel.updateDescriptionItem(descriptionAdaptor.differ.currentList)
-
+        descriptionAdaptor.setOnItemChangeFocusListener { hasfocus, position, text ->
+            if(focusOnDescriptionItem){
+                if(!hasfocus){
+                   val type = if(descriptionListLatest[position].type == NoteSubItemType.CheckBox){
+                       NoteSubItemType.String
+                   }else{
+                       NoteSubItemType.CheckBox
+                   }
+                    changeFocusItemTypeFocusRemoved(position,type, text)
+                }
+            }else{
+                if (hasfocus) {
+                    onAddFocusDesc(position)
+                } else {
+                    removeFocusDesc(position, text)
+                }
             }
-            setUpToolBar()
+
         }
         // initial list data setup
         descriptionAdaptor.differ.submitList(noteItemRecieved.description)
@@ -195,6 +256,14 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
         viewModel.descListLiveData.observe(this) {
             descriptionListLatest = it
         }
+    }
+
+       private fun setUpCheckBoxButton() {
+        viewBinding.btCheckBox.setOnClickListener {
+            changeDescItemCurrent()
+
+        }
+
     }
 
     private fun setUpThemeAdaptor() {
@@ -231,60 +300,13 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
 
         // this will be called when we change the theme using fun =${viewModel.setThemeValue(it)}
         viewModel.themeLiveData.observe(this) {
-
             themeAdaptor.currentSelected = it
             themeAdaptor.differ.submitList(null)
             themeAdaptor.differ.submitList(themeList)
             // to get current list based on dark mode and any other factor
             val currentTheme = viewModel.getThemeItem(it)
             setThemeToView(currentTheme)
-
         }
-
-    }
-
-    private fun setUpViewModel() {
-        val notesRepository = NotesRepository(NotesDataBase(this)!!)
-        val viewModelProviderFactory =
-            CreatEditViewModelProvider(application, notesRepository, noteItemRecieved)
-        viewModel =
-            ViewModelProvider(this, viewModelProviderFactory)[CreatEditViewModel::class.java]
-
-    }
-
-    private fun setUpCheckBoxButton() {
-        viewBinding.btCheckBox.setOnClickListener {
-            val list = descriptionAdaptor.differ.currentList
-            val currentFocused = descriptionAdaptor.keyBoardFocusItem
-            // change the item type to check box
-            if (list[currentFocused].type == NoteSubItemType.CheckBox) {
-
-                viewModel.changeDescriptionItem(
-                    NoteSubItem(
-                        currentFocused,
-                        NoteSubItemType.String,
-                        false,
-                        list[currentFocused].textValue
-                    )
-                )
-            } else {
-                viewModel.changeDescriptionItem(
-                    NoteSubItem(
-                        currentFocused,
-                        NoteSubItemType.CheckBox,
-                        false,
-                        list[currentFocused].textValue
-                    )
-                )
-            }
-
-            viewBinding.etTitle.requestFocus()
-            viewBinding.etTitle.clearFocus()
-            descriptionAdaptor.keyBoardFocusItem = currentFocused
-            descriptionAdaptor.notifyItemChanged(currentFocused)
-
-        }
-
     }
 
     private fun requestKeyBoard() {
@@ -295,24 +317,21 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
     }
 
     private fun clearKeyBoard() {
+        keyboardNotTriggerChange = true
         (applicationContext.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(
             viewBinding.root.windowToken,
             0
         )
+        keyboardNotTriggerChange = false
     }
 
-    override fun onVisibilityChanged(visible: Boolean) {
+    private fun setUpViewModel() {
+        val notesRepository = NotesRepository(NotesDataBase(this)!!)
+        val viewModelProviderFactory =
+            CreatEditViewModelProvider(application, notesRepository, noteItemRecieved)
+        viewModel =
+            ViewModelProvider(this, viewModelProviderFactory)[CreatEditViewModel::class.java]
 
-        // when keyboard hides or shows
-        if (!visible) {
-            focusChangeTriggeredByKeyBoard = true
-            descriptionAdaptor.keyBoardFocusItem = -1
-            isActionTabBar = false
-            setUpToolBar()
-            viewBinding.etTitle.requestFocus()
-            viewBinding.etTitle.clearFocus()
-            focusChangeTriggeredByKeyBoard = false
-        }
     }
 
     private fun changeThemeVisibility(isVisible: Boolean) {
@@ -337,7 +356,7 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
     }
 
     private fun setThemeToView(item: ThemeItem) {
-        timber.log.Timber.i("Theme_selected")
+        Log.i("themeStup", "setThemeToView: ${item.timeTextColor}")
 
         // edit text colors
         viewBinding.etTitle.setTextColor(Color.parseColor(item.editTextColor))
@@ -372,11 +391,15 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
 
         val inflater = menuInflater
 
-        if (!isActionTabBar && descriptionAdaptor.keyBoardFocusItem == -1) {
+        if (focusOnTitle || descriptionAdaptor.focusItemPosition != -1) {
+            if(focusOnTitle){
+                inflater.inflate(R.menu.action_bar_menu, menu)
+            }else{
+                inflater.inflate(R.menu.list_item_menu, menu)
+            }
 
-            inflater.inflate(R.menu.note_menu, menu)
         } else {
-            inflater.inflate(R.menu.action_bar_menu, menu)
+            inflater.inflate(R.menu.note_menu, menu)
         }
 
         return true
@@ -385,6 +408,7 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_change_theme -> {
+
                 if (!viewBinding.themeCardView.isVisible) {
                     changeThemeVisibility(true)
 
@@ -394,26 +418,19 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
                 }
             }
 
+            R.id.menu_item_check_box -> {
+                changeDescItemCurrent()
+            }
+
             R.id.menu_item_delete -> {
                 viewModel.deleteNote()
                 finish()
             }
 
             R.id.menu_done -> {
-
-                viewBinding.softInputAboutView.visibility = View.GONE
-                if (descriptionAdaptor.keyBoardFocusItem != -1) {
-                    descriptionAdaptor.keyBoardFocusItem = -1
-                    viewBinding.etTitle.requestFocus()
-                    viewBinding.etTitle.clearFocus()
-                    // fix this to update other way
-
-                } else {
-                    viewBinding.etTitle.clearFocus()
-                }
-
+                // remove focus from everything
+                 doRemoveFocusFromEveryOne()
             }
-
 
             android.R.id.home -> {
                 finish()

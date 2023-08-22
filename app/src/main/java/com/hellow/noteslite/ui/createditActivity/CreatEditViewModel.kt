@@ -11,9 +11,7 @@ import com.hellow.noteslite.model.NoteSubItem
 import com.hellow.noteslite.model.NoteSubItemType
 import com.hellow.noteslite.model.ThemeItem
 import com.hellow.noteslite.repository.NotesRepository
-import com.hellow.noteslite.utils.ConstantValues
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 class CreatEditViewModel(
     val app: Application,
@@ -77,11 +75,7 @@ class CreatEditViewModel(
 
     fun editDescriptionItem(isCreate:Boolean,position:Int,type:NoteSubItemType,text:String){
              if(isCreate){
-                  val item = if(type == NoteSubItemType.String){
-                      NoteSubItem(position,type,false,text)
-                  }else{
-                      NoteSubItem(position,type,false,text)
-                  }
+                  val item:NoteSubItem = NoteSubItem(position + 1,type,false,"")
                   addNewDescriptionItem(item)
              }else{
                   deleteDescriptionItem(position)
@@ -89,38 +83,35 @@ class CreatEditViewModel(
     }
 
    private fun addNewDescriptionItem(item: NoteSubItem) {
-        val list: MutableList<NoteSubItem> = _description.value as MutableList<NoteSubItem>
+        val myList: MutableList<NoteSubItem> = _description.value!!.toMutableList()
 
-        if(item.id==list.size){
+        if(item.id==myList.size){
             // inserted at end
-            list.add(item)
+            myList.add(item)
         }else{
             // inserted at pos
-            list.add(item.id,item)
+            myList.add(item.id,item)
             var value:Int = item.id + 1
-            while (value < list.size){
+            while (value < myList.size){
 
-                Timber.i("$value compare these value ${list[value].id}")
-                list[value].id = value
+                myList[value].id = value
                 ++value
             }
         }
-        _description.value = list
+        _description.value = myList
     }
 
    private fun deleteDescriptionItem(position: Int){
-        val list:MutableList<NoteSubItem> = _description.value!!as MutableList<NoteSubItem>
-        list.removeAt(position)
+        val myList:MutableList<NoteSubItem> = _description.value!!.toMutableList()
+       myList.removeAt(position)
         var value:Int = position
-        while (value < list.size){
+        while (value < myList.size){
 
-            Timber.i("$value compare these value  ${list[value].id}")
-
-            list[value].id = value
+            myList[value].id = value
             ++value
         }
 
-       _description.value = list
+       _description.value = myList
     }
 
  fun updateDescriptionItem(value:List<NoteSubItem>){
@@ -138,6 +129,7 @@ class CreatEditViewModel(
         currentItem.backgroundColor = _themeColor.value!!
 
         for(i in currentItem.description){
+            i.textValue.removeSuffix("\n")
             if(i.textValue!= ""){
                 currentItem.descriptionText = i.textValue
                 break

@@ -8,7 +8,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.hellow.noteslite.databinding.ThemeListItemBinding
 import com.hellow.noteslite.model.ThemeItem
-import timber.log.Timber
 
 
 open class ThemeAdaptor(private val firstSeletedItem:Int): RecyclerView.Adapter<ThemeAdaptor.ThemeViewHolder>(){

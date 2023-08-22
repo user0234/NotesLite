@@ -2,7 +2,7 @@ package com.hellow.noteslite.utils
 
 import androidx.appcompat.app.AppCompatDelegate.NightMode
 import com.hellow.noteslite.model.ThemeItem
-import timber.log.Timber
+
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -26,7 +26,7 @@ object ConstantValues {
     val darkModeTheme:ThemeItem = ThemeItem("#FFFFFF","#33FFFFFF","#000000","#333131","#736666")
 
     fun logI(value:String){
-         Timber.i(value)
+
     }
 
 

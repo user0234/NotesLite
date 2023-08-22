@@ -5,7 +5,7 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
+import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -30,12 +30,10 @@ class EditCreateDescriptionItemAdaptor(private val themeItem: ThemeItem) :
         }
     }
     val differ = AsyncListDiffer(this, differCallBack)
+    var focusItemPosition:Int = -1
+    var noteItemTheme:ThemeItem = themeItem
 
     // this to keep up the theme info to change text color
-    var noteItemTheme = themeItem
-    var keyBoardFocusItem: Int = -1
-    var wasFocusTitle = false
-
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int,
@@ -56,91 +54,31 @@ class EditCreateDescriptionItemAdaptor(private val themeItem: ThemeItem) :
     override fun onBindViewHolder(holder: ViewHolderDescriptionItem, position: Int) {
         val currentItem: NoteSubItem = differ.currentList[position]
 
-        // on create stuff to be done
-        holder.binding.etSubText.setText(currentItem.textValue)
-        if(position == 0){
-            holder.binding.etSubText.hint = "Make SomeThing"
-        }
-
-        if (currentItem.type == NoteSubItemType.String) {
-            holder.binding.checkBoxSubMain.visibility = View.GONE
-        } else {
-            holder.binding.checkBoxSubMain.visibility = View.VISIBLE
-            holder.binding.checkBoxSubMain.isChecked = currentItem.checkBox
-            if (currentItem.checkBox) {
-                holder.binding.etSubText.setTextColor(Color.parseColor(themeItem.hintTextColor))
-            } else {
-                holder.binding.etSubText.setTextColor(Color.parseColor(themeItem.editTextColor))
-            }
-        }
-
-        holder.binding.checkBoxSubMain.setOnClickListener {
-            // after changing it got checked
-            if (holder.binding.checkBoxSubMain.isChecked) {
-                // change color of text and update in differ
-                differ.currentList[holder.adapterPosition].checkBox = true
-                holder.binding.etSubText.setTextColor(Color.parseColor(themeItem.hintTextColor))
-            } else {
-                // after changing it got Unchecked
-                differ.currentList[holder.adapterPosition].checkBox = false
-                holder.binding.etSubText.setTextColor(Color.parseColor(themeItem.editTextColor))
-            }
-        }
-
         holder.binding.etSubText.setOnFocusChangeListener { _, hasFocus ->
-                  if(hasFocus){
-                      // current focus is got set on this item so change the $keyBoardFocusItem to this position
-                      // and call a function to let the activity know
-                      keyBoardFocusItem = position
-
-                      if(wasFocusTitle){
-                           wasFocusTitle = false
-
-                      }
-
-
-                      onItemChangeFocusListener?.let {
-                          it(true,position)
-                      }
-
-                  }else{
-                     // current focus is got set on this item so change the $$keyBoardFocusItem to -1
-                     //  and call a function to let the activity know
-                      currentItem.id
-                      keyBoardFocusItem = -1
-                     differ.currentList[position].textValue = holder.binding.etSubText.text.toString()
-                      onItemChangeFocusListener?.let {
-                          it(false,position)
-                      }
-                  }
-        }
-        holder.binding.etSubText.setOnEditorActionListener { textView, i, keyEvent ->
-            if (i == EditorInfo.IME_ACTION_GO ) {
-                // create next item of same type  and add focus to it
-                holder.binding.etSubText.clearFocus()
-                onItemAddDeleteListener?.let {
-                    it(true,currentItem.type,holder.adapterPosition,holder.binding.etSubText.text.toString())
-                }
-
-                return@setOnEditorActionListener true
+            onItemChangeFocusListener?.let {
+                it(hasFocus,holder.adapterPosition,holder.binding.etSubText.text.toString())
             }
 
-            return@setOnEditorActionListener false;
+        }
 
+        holder.binding.etSubText.addTextChangedListener { text ->
+            if(text.toString().endsWith("\n")&& text.toString() != "\n"){
+                holder.binding.etSubText.setText(text.toString().removeSuffix("\n"))
+
+                onItemAddDeleteListener?.let { item ->
+                    item(true,currentItem.type,holder.adapterPosition,text.toString().removeSuffix("\n"))
+                }
+            }else{
+                if(text.toString() == "\n"){
+                    holder.binding.etSubText.setText(text.toString().removeSuffix("\n"))
+                }
+            }
         }
 
         holder.binding.etSubText.setOnKeyListener { _, keyCode, keyEvent ->
                 // change to next or previous item based on if the item is to be added or deleted
-            if (keyCode == KeyEvent.KEYCODE_ENTER ) {
-                // create next item of same type  and add focus to it
-                holder.binding.etSubText.clearFocus()
-                onItemAddDeleteListener?.let {
-                    it(true,currentItem.type,holder.adapterPosition,holder.binding.etSubText.text.toString())
-                }
-            }
-            if (keyCode == KeyEvent.KEYCODE_DEL && differ.currentList.size != 1 && holder.binding.etSubText.toString() == "" ) {
+            if ((focusItemPosition != 0) && (keyCode == KeyEvent.KEYCODE_DEL)  ) {
                 // delete the current item and set focus to previous item
-                holder.binding.etSubText.clearFocus()
                 onItemAddDeleteListener?.let {
                     it(false,currentItem.type,holder.adapterPosition,holder.binding.etSubText.text.toString())
                 }
@@ -149,22 +87,55 @@ class EditCreateDescriptionItemAdaptor(private val themeItem: ThemeItem) :
             true
         }
 
+        // on create stuff to be done
+        holder.binding.etSubText.setText(currentItem.textValue)
+        if(currentItem.id == 0){
+            holder.binding.etSubText.hint = "Make SomeThing"
+        } else{
+            holder.binding.etSubText.hint = ""
+        }
 
-        if(keyBoardFocusItem == position){
-            onItemChangeFocusListener?.let {
-                it(true,position)
+
+        if(focusItemPosition == position){
+
+            holder.binding.etSubText.requestFocus()
+            holder.binding.etSubText.setSelection(holder.binding.etSubText.text.toString().length)
+        }
+
+
+        if (currentItem.type == NoteSubItemType.String) {
+            holder.binding.checkBoxSubMain.visibility = View.GONE
+        } else {
+            holder.binding.checkBoxSubMain.visibility = View.VISIBLE
+            holder.binding.checkBoxSubMain.isChecked = currentItem.checkBox
+            if (currentItem.checkBox) {
+                holder.binding.etSubText.setTextColor(Color.parseColor(noteItemTheme.hintTextColor))
+            } else {
+                holder.binding.etSubText.setTextColor(Color.parseColor(noteItemTheme.editTextColor))
+            }
+        }
+
+        holder.binding.checkBoxSubMain.setOnClickListener {
+            // after changing it got checked
+            if (holder.binding.checkBoxSubMain.isChecked) {
+                // change color of text and update in differ
+                differ.currentList[holder.adapterPosition].checkBox = true
+                holder.binding.etSubText.setTextColor(Color.parseColor(noteItemTheme.hintTextColor))
+            } else {
+                // after changing it got Unchecked
+                differ.currentList[holder.adapterPosition].checkBox = false
+                holder.binding.etSubText.setTextColor(Color.parseColor(noteItemTheme.editTextColor))
             }
         }
 
 
     }
 
-    private var onItemChangeFocusListener: ((Boolean,Int) -> Unit)? = null
+    private var onItemChangeFocusListener: ((Boolean,Int,String) -> Unit)? = null
 
-    fun setOnItemChangeFocusListener(listener: (Boolean,Int) -> Unit) {
+    fun setOnItemChangeFocusListener(listener: (Boolean,Int,String) -> Unit) {
         onItemChangeFocusListener = listener
     }
-
 
     // isCreate:Boolean,Item type :NoteSubItemType,position of current Item:Int
     private var onItemAddDeleteListener: ((Boolean,NoteSubItemType,Int,String) -> Unit)? = null
@@ -172,4 +143,6 @@ class EditCreateDescriptionItemAdaptor(private val themeItem: ThemeItem) :
     fun setOnItemAddDeleteListener(listener: (Boolean,NoteSubItemType,Int,String) -> Unit) {
         onItemAddDeleteListener = listener
     }
+
+
 }

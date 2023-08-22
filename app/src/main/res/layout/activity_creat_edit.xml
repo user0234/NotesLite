@@ -7,7 +7,14 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     tools:context=".ui.mainActivity.MainActivity">
-
+    <EditText
+        android:id="@+id/remove_focus_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:visibility="visible"
+        />
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/app_bar"
         android:layout_width="match_parent"
@@ -30,20 +37,23 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/app_bar">
+        app:layout_constraintTop_toBottomOf="@+id/app_bar"
+        app:layout_constraintVertical_bias="0.0">
+
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
+
             <LinearLayout
+                android:id="@+id/ll_tilte_date"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="10dp"
                 android:orientation="vertical"
                 android:transitionName="transition_card"
-                android:id="@+id/ll_tilte_date"
-                app:layout_constraintTop_toTopOf="parent"
-                >
+                app:layout_constraintTop_toTopOf="parent">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_title"
@@ -51,10 +61,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/hint_text_color"
-                    android:inputType="textMultiLine"
+                    android:maxLines="20"
                     android:textAlignment="textStart"
                     android:textColor="@android:color/black"
-                    android:imeOptions="actionDone"
                     android:textSize="30sp"
                     tools:text="this is text" />
 
@@ -67,17 +76,16 @@
                     tools:text="26 June 10:50 AM  | 20 characters" />
 
             </LinearLayout>
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_description"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:layout_constraintTop_toBottomOf="@+id/ll_tilte_date"
-                android:layout_marginTop="10dp"
                 android:layout_marginHorizontal="25dp"
+                android:layout_marginTop="10dp"
+                app:layout_constraintTop_toBottomOf="@+id/ll_tilte_date"
                 tools:itemCount="5"
-                tools:listitem="@layout/create_edit_adaptor_checkbox_item"
-                />
-
+                tools:listitem="@layout/create_edit_adaptor_checkbox_item" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
 
@@ -129,6 +137,15 @@
                 android:clickable="false"
                 android:visibility="visible"
                 android:src="@drawable/baseline_check_box_24" />
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/bt_remove_focus"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:backgroundTint="@android:color/transparent"
+                android:clickable="false"
+                android:visibility="visible"
+                android:src="@drawable/baseline_delete_24" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

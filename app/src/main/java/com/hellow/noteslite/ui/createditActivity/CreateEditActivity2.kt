@@ -13,11 +13,9 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
-import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.core.view.isVisible
-import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hellow.noteslite.R
@@ -28,7 +26,6 @@ import com.hellow.noteslite.databinding.ActivityCreatEditBinding
 import com.hellow.noteslite.model.NoteItem
 import com.hellow.noteslite.model.ThemeItem
 import com.hellow.noteslite.repository.NotesRepository
-import com.hellow.noteslite.utils.ConstantValues
 import com.hellow.noteslite.utils.CreatEditViewModelProvider
 import com.hellow.noteslite.utils.OnKeyBoardListener
 
@@ -146,12 +143,6 @@ class CreateEditActivity2 : AppCompatActivity(), OnKeyBoardListener {
         viewBinding.rvDescription.setHasFixedSize(false)
 
 
-        descriptionAdaptor.setOnItemChangeFocusListener { hasfocus,position ->
-            setUpToolBar()
-            if(hasfocus){
-                changeThemeVisibility(false)
-            }
-        }
     }
 
 
@@ -203,7 +194,7 @@ class CreateEditActivity2 : AppCompatActivity(), OnKeyBoardListener {
 
 
     private fun setThemeToView(item: ThemeItem) {
-        timber.log.Timber.i("Theme_selected")
+
         viewBinding.etTitle.setTextColor(Color.parseColor(item.editTextColor))
         viewBinding.etTitle.setHintTextColor(Color.parseColor(item.hintTextColor))
         viewBinding.tvTime.setTextColor(Color.parseColor(item.hintTextColor))
@@ -233,7 +224,7 @@ class CreateEditActivity2 : AppCompatActivity(), OnKeyBoardListener {
 
         val inflater = menuInflater
 
-        if (!isActionTabBar && descriptionAdaptor.keyBoardFocusItem == -1) {
+        if (!isActionTabBar && descriptionAdaptor.focusItemPosition == -1) {
 
             inflater.inflate(R.menu.note_menu, menu)
             viewBinding.softInputAboutView.visibility = View.GONE
@@ -265,8 +256,8 @@ class CreateEditActivity2 : AppCompatActivity(), OnKeyBoardListener {
             }
 
             R.id.menu_done -> {
-                if(descriptionAdaptor.keyBoardFocusItem != -1){
-                    descriptionAdaptor.keyBoardFocusItem = -1
+                if(descriptionAdaptor.focusItemPosition != -1){
+                    descriptionAdaptor.focusItemPosition = -1
                     viewBinding.etTitle.requestFocus()
                     viewBinding.etTitle.clearFocus()
                     // fix this to update other way
