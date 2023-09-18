@@ -12,8 +12,7 @@ import com.hellow.noteslite.model.ThemeItem
 
 open class ThemeAdaptor(private val firstSeletedItem:Int): RecyclerView.Adapter<ThemeAdaptor.ThemeViewHolder>(){
 
-    inner class ThemeViewHolder(val binding: ThemeListItemBinding): RecyclerView.ViewHolder(binding.root){
-    }
+    inner class ThemeViewHolder(val binding: ThemeListItemBinding): RecyclerView.ViewHolder(binding.root)
 
 
       var currentSelected:Int = firstSeletedItem

@@ -1,6 +1,7 @@
 package com.hellow.noteslite.ui.createditActivity
 
 import android.graphics.Color
+import android.graphics.PorterDuff
 import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
@@ -37,7 +38,7 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
     private lateinit var viewModel: CreatEditViewModel
     private lateinit var themeAdaptor: ThemeAdaptor
     private lateinit var descriptionAdaptor: EditCreateDescriptionItemAdaptor
-    private lateinit var noteItemRecieved: NoteItem
+    private lateinit var noteItemReceived: NoteItem
     private lateinit var themeList: List<ThemeItem>
     private lateinit var descriptionListLatest: List<NoteSubItem>
 
@@ -56,7 +57,7 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
 
         // get the note item passed
         if (intent.hasExtra("noteItem")) {
-            noteItemRecieved = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            noteItemReceived = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 intent.getParcelableExtra(
                     "noteItem",
                     NoteItem::class.java
@@ -84,12 +85,12 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
         // setUp app bar with different menu
 
         // initial color of app bar
-        viewBinding.appBar.setBackgroundColor(Color.parseColor(themeList[noteItemRecieved.backgroundColor].toolBarColor))
+        viewBinding.appBar.setBackgroundColor(Color.parseColor(themeList[noteItemReceived.backgroundColor].toolBarColor))
         setUpToolBar()
 
         // setUp title values
         setUpTitleView()
-        viewBinding.tvTime.text = ConstantValues.dateConvert(noteItemRecieved.id)
+        viewBinding.tvTime.text = ConstantValues.dateConvert(noteItemReceived.id)
         // set up description items
         //  descriptionListLatest = noteItem Received .description
         setUpDescriptionAdaptor()
@@ -121,9 +122,9 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
 
     private fun setUpTitleView() {
         // assign initial value
-        viewBinding.etTitle.setText(noteItemRecieved.title)
-        viewBinding.etTitle.setTextColor(Color.parseColor(themeList[noteItemRecieved.backgroundColor].editTextColor))
-        viewBinding.etTitle.setHintTextColor(Color.parseColor(themeList[noteItemRecieved.backgroundColor].hintTextColor))
+        viewBinding.etTitle.setText(noteItemReceived.title)
+        viewBinding.etTitle.setTextColor(Color.parseColor(themeList[noteItemReceived.backgroundColor].editTextColor))
+        viewBinding.etTitle.setHintTextColor(Color.parseColor(themeList[noteItemReceived.backgroundColor].hintTextColor))
         viewBinding.removeFocusText.setOnFocusChangeListener { _, hasFocus ->
 
         }
@@ -195,7 +196,7 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
     private fun setUpDescriptionAdaptor() {
         // description adaptor is create using the current theme item
         descriptionAdaptor =
-            EditCreateDescriptionItemAdaptor(themeList[noteItemRecieved.backgroundColor])
+            EditCreateDescriptionItemAdaptor(themeList[noteItemReceived.backgroundColor])
 
         viewBinding.rvDescription.adapter = descriptionAdaptor
 
@@ -214,7 +215,7 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
             if (!isCreate) {
                 // delete current item
 
-                viewModel.editDescriptionItem(isCreate, currentItemPos, noteSubItemType, text)
+                viewModel.editDescriptionItem(false, currentItemPos, noteSubItemType, text)
               //  removeFocusAll()
                 descriptionAdaptor.focusItemPosition = currentItemPos - 1
                 descriptionAdaptor.differ.submitList(descriptionListLatest)
@@ -222,7 +223,7 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
             } else {
                 //  create new item
 
-                viewModel.editDescriptionItem(isCreate, currentItemPos, noteSubItemType, text)
+                viewModel.editDescriptionItem(true, currentItemPos, noteSubItemType, text)
               // removeFocusAll()
                 descriptionAdaptor.focusItemPosition = currentItemPos + 1
                 descriptionAdaptor.differ.submitList(descriptionListLatest)
@@ -251,7 +252,7 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
 
         }
         // initial list data setup
-        descriptionAdaptor.differ.submitList(noteItemRecieved.description)
+        descriptionAdaptor.differ.submitList(noteItemReceived.description)
 
         viewModel.descListLiveData.observe(this) {
             descriptionListLatest = it
@@ -269,9 +270,10 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
     private fun setUpThemeAdaptor() {
 
         // first value of selected theme when the list is create
-        themeAdaptor = ThemeAdaptor(noteItemRecieved.backgroundColor)
+        themeAdaptor = ThemeAdaptor(noteItemReceived.backgroundColor)
 
         viewBinding.listBackgroundTheme.adapter = themeAdaptor
+
         viewBinding.listBackgroundTheme.layoutManager = LinearLayoutManager(
             this,
             LinearLayoutManager.HORIZONTAL, false
@@ -328,7 +330,7 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
     private fun setUpViewModel() {
         val notesRepository = NotesRepository(NotesDataBase(this)!!)
         val viewModelProviderFactory =
-            CreatEditViewModelProvider(application, notesRepository, noteItemRecieved)
+            CreatEditViewModelProvider(application, notesRepository, noteItemReceived)
         viewModel =
             ViewModelProvider(this, viewModelProviderFactory)[CreatEditViewModel::class.java]
 
@@ -368,6 +370,11 @@ class CreatEditActivity : AppCompatActivity(), OnKeyBoardListener {
         viewBinding.root.setBackgroundColor(Color.parseColor(item.backGroundColor))
         // tool bar color
         viewBinding.toolbar.setBackgroundColor(Color.parseColor(item.toolBarColor))
+
+
+        viewBinding.toolbar.setTitleTextColor(Color.parseColor(item.editTextColor))
+
+        viewBinding.toolbar.navigationIcon!!.setColorFilter(Color.parseColor(item.editTextColor), PorterDuff.Mode.SRC_ATOP);
         // theme list background color
         viewBinding.listBackgroundTheme.setBackgroundColor(Color.parseColor(item.toolBarColor))
         // adding color to the keyboard shown item

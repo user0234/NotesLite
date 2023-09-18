@@ -20,8 +20,6 @@ class CreatEditViewModel(
 ) : AndroidViewModel(app) {
 
     // set the items for livedata and state saving
-
-
     private var _description = MutableLiveData<List<NoteSubItem>>(currentItem.description)
     val descListLiveData: LiveData<List<NoteSubItem>>
         get() = _description
@@ -104,11 +102,12 @@ class CreatEditViewModel(
    private fun deleteDescriptionItem(position: Int){
         val myList:MutableList<NoteSubItem> = _description.value!!.toMutableList()
        myList.removeAt(position)
-        var value:Int = position
+       myList.sortBy { it.id }
+        var value = 0
         while (value < myList.size){
 
             myList[value].id = value
-            ++value
+            value++
         }
 
        _description.value = myList

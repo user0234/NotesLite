@@ -26,7 +26,7 @@ class EditCreateDescriptionItemAdaptor(private val themeItem: ThemeItem) :
         }
 
         override fun areContentsTheSame(oldItem: NoteSubItem, newItem: NoteSubItem): Boolean {
-            return oldItem.type == newItem.type && oldItem.textValue == newItem.textValue
+            return oldItem.type == newItem.type &&  oldItem.id == newItem.id
         }
     }
     val differ = AsyncListDiffer(this, differCallBack)
@@ -38,13 +38,13 @@ class EditCreateDescriptionItemAdaptor(private val themeItem: ThemeItem) :
         parent: ViewGroup,
         viewType: Int,
     ): ViewHolderDescriptionItem {
-        val checkBoxBinding: CreateEditDescriptionItemBinding =
-            CreateEditDescriptionItemBinding.inflate(
-                LayoutInflater.from(parent.context),
-                parent,
-                false
-            )
-        return ViewHolderDescriptionItem(checkBoxBinding)
+            val checkBoxBinding: CreateEditDescriptionItemBinding =
+                CreateEditDescriptionItemBinding.inflate(
+                    LayoutInflater.from(parent.context),
+                    parent,
+                    false
+                )
+            return ViewHolderDescriptionItem(checkBoxBinding)
     }
 
     override fun getItemCount(): Int {
@@ -58,29 +58,29 @@ class EditCreateDescriptionItemAdaptor(private val themeItem: ThemeItem) :
             onItemChangeFocusListener?.let {
                 it(hasFocus,holder.adapterPosition,holder.binding.etSubText.text.toString())
             }
-
         }
 
         holder.binding.etSubText.addTextChangedListener { text ->
-            if(text.toString().endsWith("\n")&& text.toString() != "\n"){
+            if(text.toString().endsWith("\n")){
                 holder.binding.etSubText.setText(text.toString().removeSuffix("\n"))
 
                 onItemAddDeleteListener?.let { item ->
-                    item(true,currentItem.type,holder.adapterPosition,text.toString().removeSuffix("\n"))
+                    item(true,currentItem.type,position,text.toString().removeSuffix("\n"))
                 }
             }else{
                 if(text.toString() == "\n"){
-                    holder.binding.etSubText.setText(text.toString().removeSuffix("\n"))
+                    holder.binding.etSubText.setText("")
                 }
             }
         }
 
         holder.binding.etSubText.setOnKeyListener { _, keyCode, keyEvent ->
+
                 // change to next or previous item based on if the item is to be added or deleted
             if ((focusItemPosition != 0) && (keyCode == KeyEvent.KEYCODE_DEL)  ) {
                 // delete the current item and set focus to previous item
                 onItemAddDeleteListener?.let {
-                    it(false,currentItem.type,holder.adapterPosition,holder.binding.etSubText.text.toString())
+                    it(false,currentItem.type,position,holder.binding.etSubText.text.toString())
                 }
             }
 
