@@ -33,7 +33,7 @@
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_marginBottom="20dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:background="@android:color/transparent">
@@ -41,7 +41,6 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-
             android:orientation="vertical">
 
             <LinearLayout
@@ -81,7 +80,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="15dp"
                 tools:itemCount="2"
-                tools:listitem="@layout/create_edit_adaptor_checkbox_item" />
+                tools:listitem="@layout/check_box_adaptor_item" />
         </LinearLayout>
 
     </ScrollView>
@@ -93,9 +92,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+         android:layout_gravity="bottom"
         >
 
         <androidx.recyclerview.widget.RecyclerView
@@ -113,10 +110,8 @@
         android:id="@+id/soft_input_about_view"
         android:layout_width="match_parent"
         android:layout_height="70dp"
-        android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:visibility="gone"
+        android:layout_gravity="bottom"
         >
         <LinearLayout
             android:layout_width="match_parent"
