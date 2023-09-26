@@ -69,6 +69,13 @@ class CreatEditViewModel(
         _title.value = text
     }
 
+   private var themeValue:Int = 0
+
+    fun setThemeValue(value:Int){
+        themeValue = value
+    }
+
+
     var focusPosition: Int = -1;
 
     private fun updateListItems() {
@@ -118,7 +125,7 @@ class CreatEditViewModel(
         var descriptionTextValue:String = ""
 
         for(i in listItems){
-            if(!i.textValue.isNullOrBlank()){
+            if(i.textValue.isNotBlank()){
                 descriptionTextValue = i.textValue
                 break
             }
@@ -129,17 +136,12 @@ class CreatEditViewModel(
         currentNote.title = title.value?:""
         currentNote.description = listItems
         currentNote.descriptionText = descriptionTextValue
-
+        currentNote.backgroundColor = themeValue
         viewModelScope.launch {
             repository.updateNote(currentNote)
         }
 
     }
-//
-//    fun updateListId() {
-//
-//    }
-
 
     override fun newItemAdded(pos: Int, textCurrent: String, textNext: String) {
 

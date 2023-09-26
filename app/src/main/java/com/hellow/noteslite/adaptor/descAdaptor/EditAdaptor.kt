@@ -68,12 +68,8 @@ class EditAdaptor(private val themeItem: ThemeItem, val callback: Callback) :
         val currentItem: NoteSubItem = differ.currentList[position]
         when (holder) {
             is CheckBoxItemViewHolder -> {
-                holder.bind(currentItem)
+                holder.bind(currentItem,themeItem)
             }
-
-//            is TextItemViewHolder -> {
-//                holder.bind(currentItem)
-//            }
         }
 
         if (holder is EditFocusableViewHolder && position == pendingFocusChange?.itemPos) {

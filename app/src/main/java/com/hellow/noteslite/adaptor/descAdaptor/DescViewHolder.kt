@@ -1,5 +1,6 @@
 package com.hellow.noteslite.adaptor.descAdaptor
 
+import android.graphics.Color
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.KeyEvent
@@ -8,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.hellow.noteslite.databinding.CheckBoxAdaptorItemBinding
 import com.hellow.noteslite.model.NoteSubItem
 import com.hellow.noteslite.model.NoteSubItemType
+import com.hellow.noteslite.model.ThemeItem
 import com.hellow.noteslite.utils.showKeyboard
 
 sealed interface EditFocusableViewHolder {
@@ -49,7 +51,7 @@ class CheckBoxItemViewHolder(
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val pos = bindingAdapterPosition
                 if (pos != RecyclerView.NO_POSITION) {
-                    callback.textChanged(pos,s.toString())
+                    callback.textChanged(pos, s.toString())
                 }
 
             }
@@ -104,15 +106,18 @@ class CheckBoxItemViewHolder(
         }
     }
 
-    fun bind(item: NoteSubItem) {
+    fun bind(item: NoteSubItem, themeItem: ThemeItem) {
         itemValue = item
         editText.setText(item.textValue)
         checkBox.isChecked = item.checkBox
-        if(item.type == NoteSubItemType.String){
+        if (item.type == NoteSubItemType.String) {
             checkBox.visibility = View.GONE
-        }else{
+        } else {
             checkBox.visibility = View.VISIBLE
         }
+        // set themeValue
+        editText.setTextColor(Color.parseColor(themeItem.editTextColor))
+        editText.setHintTextColor(Color.parseColor(themeItem.hintTextColor))
     }
 
     override fun setFocus(pos: Int) {

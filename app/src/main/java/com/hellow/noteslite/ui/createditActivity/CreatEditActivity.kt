@@ -1,5 +1,7 @@
 package com.hellow.noteslite.ui.createditActivity
 
+import android.graphics.Color
+import android.graphics.PorterDuff
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -11,6 +13,7 @@ import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hellow.noteslite.R
+import com.hellow.noteslite.adaptor.ThemeAdaptor
 import com.hellow.noteslite.adaptor.descAdaptor.EditAdaptor
 import com.hellow.noteslite.database.NotesDataBase
 import com.hellow.noteslite.databinding.ActivityCreatEditBinding
@@ -29,6 +32,7 @@ class CreatEditActivity : AppCompatActivity() {
     private lateinit var adaptor: EditAdaptor
     private lateinit var noteItemReceived: NoteItem
     private var isFocused = false
+    private lateinit var themeAdapter: ThemeAdaptor
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,23 +67,70 @@ class CreatEditActivity : AppCompatActivity() {
         setUpAdaptor()
         setUpLiveData()
         setUpTitleData()
-
-      //  setUpChangeItemType()
-
+        setUpThemeDataAndAdaptor()
+        //  setUpChangeItemType()
         setUpDescButton()
         viewBinding.softInputAboutView.visibility = View.GONE
+        changeThemeInView(noteItemReceived.backgroundColor)
+    }
+
+    private fun setUpThemeDataAndAdaptor() {
+        themeAdapter = ThemeAdaptor(noteItemReceived.backgroundColor)
+
+        viewBinding.listBackgroundTheme.adapter = themeAdapter
+        viewBinding.listBackgroundTheme.layoutManager = LinearLayoutManager(
+            this,
+            LinearLayoutManager.HORIZONTAL, false
+        )
+        // size will be changing
+        viewBinding.listBackgroundTheme.setHasFixedSize(true)
+        themeAdapter.differ.submitList(viewModel.getAllThemes())
+        themeAdapter.setOnItemClickListener { item ->
+            changeTheme(item)
+        }
+    }
+
+    private fun changeTheme(value: Int) {
+
+        viewModel.setThemeValue(value)
+        themeAdapter.currentSelected = value
+        themeAdapter.notifyDataSetChanged()
+        viewBinding.listBackgroundTheme.scrollToPosition(value)
+        changeThemeInView(value)
+    }
+
+    private fun changeThemeInView(value: Int) {
+        val item = viewModel.getThemeItem(value)
+        // edit text colors
+        viewBinding.etTitle.setTextColor(Color.parseColor(item.editTextColor))
+        viewBinding.etTitle.setHintTextColor(Color.parseColor(item.hintTextColor))
+
+        // time value color
+        viewBinding.tvTime.setTextColor(Color.parseColor(item.hintTextColor))
+        // whole background color
+        viewBinding.root.setBackgroundColor(Color.parseColor(item.backGroundColor))
+        // tool bar color
+        viewBinding.toolbar.setBackgroundColor(Color.parseColor(item.toolBarColor))
+        viewBinding.toolbar.setTitleTextColor(Color.parseColor(item.editTextColor))
+        viewBinding.toolbar.navigationIcon!!.setColorFilter(
+            Color.parseColor(item.editTextColor),
+            PorterDuff.Mode.SRC_ATOP
+        );
+        // theme list background color
+        viewBinding.listBackgroundTheme.setBackgroundColor(Color.parseColor(item.toolBarColor))
+        // adding color to the keyboard shown item
+        viewBinding.softInputAboutView.setBackgroundColor(Color.parseColor(item.toolBarColor))
+
+        // TODO adding color to items of description -  just add and remove the list but first update the theme item
+
+        adaptor.noteItemTheme = item
+        // to update the view theme
+        adaptor.notifyDataSetChanged()
     }
 
     private fun setUpDescButton() {
         viewBinding.btCheckBox.setOnClickListener {
             viewModel.changeCheckBoxVisibility()
-        }
-    }
-
-    private fun setUpChangeItemType() {
-        viewBinding.btCheckBox.setOnClickListener {
-            onMenuDoneButtonClicked() // remove focus
-            viewModel.changeItem()
         }
     }
 
@@ -92,23 +143,23 @@ class CreatEditActivity : AppCompatActivity() {
         viewBinding.etTitle.setOnFocusChangeListener { view, hasFocus ->
             if (hasFocus) {
                 titleFocused()
-            } else {
-
             }
         }
     }
 
     private fun titleFocused() {
         isFocused = true
+        changeThemeVisibility(false)
         setUpToolBar()
         viewBinding.softInputAboutView.visibility = View.GONE
     }
 
-    private fun descFocused(focused:Boolean) {
-        if(!focused){
+    private fun descFocused(focused: Boolean) {
+        if (!focused) {
             return
         }
         isFocused = focused
+        changeThemeVisibility(false)
         setUpToolBar()
         viewBinding.softInputAboutView.visibility = View.VISIBLE
     }
@@ -116,7 +167,7 @@ class CreatEditActivity : AppCompatActivity() {
     private fun setUpLiveData() {
         viewModel.focusEvent.observeEvent(this, adaptor::setItemFocus)
         viewModel.focusGainEvent.observe(this) {
-            Log.i("Focus Changed","Focus - $it")
+            Log.i("Focus Changed", "Focus - $it")
             descFocused(it)
         }
 
@@ -139,6 +190,7 @@ class CreatEditActivity : AppCompatActivity() {
 
         // size will be changing
         viewBinding.rvDescription.setHasFixedSize(false)
+
     }
 
 
@@ -177,7 +229,9 @@ class CreatEditActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_change_theme -> {
-
+                changeThemeVisibility(
+                    viewBinding.themeCardView.visibility != View.VISIBLE
+                )
             }
 
             R.id.menu_item_delete -> {
@@ -195,6 +249,27 @@ class CreatEditActivity : AppCompatActivity() {
             }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun changeThemeVisibility(isVisible: Boolean) {
+        if (isVisible) {
+            viewBinding.themeCardView.animate()
+                .translationY(1F)
+                .setDuration(300)
+                .withStartAction {
+                    viewBinding.themeCardView.visibility = View.VISIBLE
+                }
+                .start()
+
+        } else {
+            viewBinding.themeCardView.animate()
+                .translationY(viewBinding.themeCardView.height.toFloat())
+                .setDuration(300)
+                .withEndAction {
+                    viewBinding.themeCardView.visibility = View.GONE
+                }
+                .start()
+        }
     }
 
     private fun onMenuDoneButtonClicked() {
