@@ -64,7 +64,7 @@ class CreatEditActivity : AppCompatActivity() {
         setUpLiveData()
         setUpTitleData()
 
-        setUpChangeItemType()
+      //  setUpChangeItemType()
 
         setUpDescButton()
         viewBinding.softInputAboutView.visibility = View.GONE

@@ -115,7 +115,25 @@ class CreatEditViewModel(
     }
 
     fun updateNote() {
-        //   val currentItem =
+        var descriptionTextValue:String = ""
+
+        for(i in listItems){
+            if(!i.textValue.isNullOrBlank()){
+                descriptionTextValue = i.textValue
+                break
+            }
+        }
+
+        Log.i("Description Text","text desc - ${descriptionTextValue}")
+         val currentNote = this.currentItem
+        currentNote.title = title.value?:""
+        currentNote.description = listItems
+        currentNote.descriptionText = descriptionTextValue
+
+        viewModelScope.launch {
+            repository.updateNote(currentNote)
+        }
+
     }
 //
 //    fun updateListId() {
@@ -172,7 +190,6 @@ class CreatEditViewModel(
     override fun focusLose(pos: Int, text: String) {
         // focus lost
         Log.i("Focus Changed", "Focus lost - $pos")
-
         // listItems[pos].textValue = text
         updateListItems()
 
